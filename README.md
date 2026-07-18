@@ -1,5 +1,5 @@
 # atcoder
-library for atcoder 
+library for atcoder   
 some codes are transplanted from shin-kn/atcoder_old
 
 ## to use 
