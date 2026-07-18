@@ -14,3 +14,6 @@ For compile and run.
 As a input, it uses text.txt
 - test.cmd  
 copy the clipboard into text.txt
+- submit.cmd  
+Using include.py, it write main.cpp into one file, including included files  
+and yank into the clipboard

@@ -1,4 +1,4 @@
-#this is from
+#thanks a lot for
 #https://github.com/AlexeyDmitriev/inline_includes/blob/master/inline_includes
 
 import sys
