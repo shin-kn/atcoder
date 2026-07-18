@@ -1,9 +1,7 @@
-#include <iostream>
-using std::cout;
-using std::endl;
+#include "library/standard.cpp"
+
+
+
 
 void solve(){
-    cout<<"asdf"<<endl;
-
-
 }
