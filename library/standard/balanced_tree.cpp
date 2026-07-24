@@ -11,8 +11,8 @@ template  <typename T,typename U> class AVLTree{
 		void Push(T,U);
 
 		bool Find(T);
-		bool Lower(T);
-		bool Upper(T);
+		bool Leq(T);
+		bool Geq(T);
 		ull Number(){return CurrentNumber;}
 
 		void Delete();
@@ -247,7 +247,7 @@ void AVLTree<T,U>::Push(T index,U val){
 }
 
 template <typename T,typename U>
-bool AVLTree<T,U>::Lower(T index){
+bool AVLTree<T,U>::Leq(T index){
 	Node* BestCurrent=nullptr;
 	ull BestCurrentNumber=0;
 	Current=Root;
@@ -280,7 +280,7 @@ bool AVLTree<T,U>::Lower(T index){
 
 
 template <typename T,typename U>
-bool AVLTree<T,U>::Upper(T index){
+bool AVLTree<T,U>::Geq(T index){
 	Node* BestCurrent=nullptr;
 	ull BestCurrentNumber=0;
 	Current=Root;

@@ -13,6 +13,10 @@ template <std::signed_integral T> inline T Abs(T num){
 	return num;
 }
 
+template <std::floating_point T> inline T Abs(T num){
+	return num<T(0.0)?T(-1.0)*num:num;
+}
+
 template <std::integral T> inline T Dist(T n1,T n2){
 	if(n1>n2){
 		return n1-n2;
