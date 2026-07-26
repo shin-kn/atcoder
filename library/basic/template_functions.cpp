@@ -1,6 +1,7 @@
 #pragma once
 #include "base.cpp"
 #include "function_type.cpp"
+#include "min_max.cpp"
 
 template <typename T>
 FunctionType<T(T,T)> AddFunc(){

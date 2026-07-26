@@ -2,10 +2,17 @@
 
 #include "base.cpp"
 
+
+template <typename... T> 
+struct callable_base {};
+
+
 template <typename TResult,typename... TArgs> 
-struct callable_base {
+struct callable_base<TResult(TArgs...)> {
    virtual TResult operator()(TArgs...)=0;
    virtual ~callable_base(){}
+   public:
+   	virtual callable_base* clone()=0;
 };
 
 template <typename... T> struct callable{
@@ -13,10 +20,15 @@ template <typename... T> struct callable{
 };
 
 template <typename T,typename TResult,typename... TArgs>
-struct callable<TResult(TArgs...),T>:callable_base<TResult,TArgs...> {
-	T object;
+struct callable<TResult(TArgs...),T>:callable_base<TResult(TArgs...)> {
+	T object;//assume object to be copy initializable
 	callable(T&& obj):object(std::move(obj)){}
 	callable(T& obj):object(obj){}
+
+	callable_base<TResult(TArgs...)>* clone(){
+		callable* cloned=new callable(object);
+		return cloned;
+	}
     
 	
 	inline TResult operator()(TArgs... args){
@@ -33,7 +45,7 @@ class FunctionType;
 template <typename TResult,typename... TArgs> 
 class FunctionType<TResult(TArgs...)> {
 	public:
-		callable_base<TResult,TArgs...>* Func=nullptr;
+		callable_base<TResult(TArgs...)>* Func=nullptr;
 		FunctionType(){}
 		FunctionType(TResult (*func) (TArgs...)){
 			Func=new callable<TResult(TArgs...),TResult(*) (TArgs...)>(func);
@@ -59,7 +71,9 @@ class FunctionType<TResult(TArgs...)> {
 	
 		
 		
-		FunctionType(FunctionType& src)=delete;
+		FunctionType(FunctionType& src){
+			Func=src.Func->clone();
+		}
 		FunctionType(FunctionType&& src){
 			Func=src.Func;
 			src.Func=nullptr;

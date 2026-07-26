@@ -1,76 +1,53 @@
 #include "library/standard.cpp"
 
-
-ld get_angle(ld x,ld y){
-    assert(x!=0.0 or y!=0.0);
-    ld len=std::sqrt(x*x+y*y);
-    ld angle=std::acos(x/len)/PI<ld>*ld(180.0);
-    if(y<0 ){
-        angle=ld(360.0)-angle;
+ull solver(Array<ull>& arr,ull N){
+    SegmentTree<ull> segtree(N+1,0ull,MaxFunc<ull>());
+    range(i,v,arr){
+        ull prev=segtree.Eval(0,v);
+        segtree.Set(v,prev+1);
     }
-    return angle;
-
-
-    
+    return segtree.Eval(0,N);
 
 }
-
 
 
 void solve(){
     ull N;
     cin>>N;
-    Array<ld> X,Y;
-    rep(i,N){
-        cin>>X[i];
-        cin>>Y[i];
-    }
-    Array<AVLTree<ld,ull>> arr;
-    rep(i,N){
-        rep(j,N){
-            if(i==j) continue;
-            arr[i].Push(get_angle(X[j]-X[i],Y[j]-Y[i]),j);
-        }
-    }
-
-    auto abs=[&](ld n)->ld{
-        if(n<=-360.0){
-            n+=360.0;
-        }
-        if(n>=360.0){
-            n-=360.0;
-        }
-        return Abs(n);
+    Array<ull> P;
+    rep(i,N) cin>>P[i];
+    auto oper=[](Set<ull,2> val1,Set<ull,2> val2)->Set<ull,2>{
+        if(val1[0]>val2[0]) return val1;
+        return val2;
     };
+    SegmentTree<Set<ull,2>> segtree(N,Set<ull,2>(0,0),oper);
 
-    ld val=360.0;
     rep(i,N){
-        arr[i].Geq(ld(0.0));
-        ld zero_angle=arr[i].Index();
-        arr[i].Leq(ld(360.0));
-        ld full_angle=arr[i].Index();
-        rep(j,N){
-            if(i==j) continue;
-            ld angle=get_angle(X[j]-X[i],Y[j]-Y[i]);
-            ld wanted=angle+(ld)(180.0);
-            if(wanted>=ld(360.0)) wanted-=(ld)360.0;
-            
-            UpdateMin(val,abs((wanted-zero_angle)));
-
-            UpdateMin(val,abs((wanted-full_angle)));
-            
-            arr[i].Leq(wanted);
-            UpdateMin(val,abs((wanted-arr[i].Index())));
-
-            arr[i].Geq(wanted);
-            UpdateMin(val,abs((wanted-arr[i].Index())));
-
-
-        }
+        segtree.Set(i,Set<ull,2>(P[i],i));
     }
-    PrintDouble(ld(180.0)-val);
+    ull range=N-1;
+    ull x_count=0;
+    Array<bool> x_used(N,false);
+
+
+    while(true){
+        auto maxval=segtree.Eval(0,range);
+        x_used[maxval[1]]=true;
+        ++x_count;
+        range=maxval[1];
+        if(range==0) break;
+        --range;
+    }
+
+    Array<ull> newarr;
+    rep(i,N){
+        if(!x_used[i]) newarr.Push(P[i]);
+    }
+    ull y_count=solver(newarr,N);
+    cout<<x_count+y_count<<endl;
 
 
 
+    
 
 }

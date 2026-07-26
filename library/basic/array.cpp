@@ -4,6 +4,8 @@
 #include "math.cpp"
 #include "light_array.cpp"
 
+constexpr ull SMALL_TYPE=100;
+constexpr ull SMALL_LENGTH=8;
 
 template <typename T,bool Unsafe=false> class Array {
 	T** arr=nullptr;
@@ -138,6 +140,14 @@ template <typename T, bool Unsafe> inline T& Array<T,Unsafe>::operator () (ull i
 template <typename T, bool Unsafe> inline void Array<T,Unsafe>::Allocate(ull cap){
 	if(cap<=Capacity) return;
 	cap=BiggerPower2(cap);
+	if constexpr (sizeof(T)<=SMALL_TYPE){
+		if(Capacity==0){
+			if(cap<SMALL_LENGTH){
+				cap=BiggerPower2(SMALL_LENGTH);
+			}
+		}
+	}
+
 			
 			
 	T** oldarr=arr;
