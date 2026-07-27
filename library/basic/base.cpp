@@ -45,24 +45,13 @@ constexpr ull NiceP=998244353;
 constexpr ull SomeBigSize=1024*1024*1;
 
 
-template <std::integral T>
-class OneValue{
-    public:
-        constexpr static T value=static_cast<T>((int)1);
-};
-
-template <typename T>
-constexpr inline T One=OneValue<T>::value;
-
-
-
 template <typename T>
 constexpr T PI=std::numbers::pi_v<T>;
 
 template <std::unsigned_integral T>
 class InftyValue{
     public:
-        constexpr static T value=static_cast<T>(0)-One<T>;
+        constexpr static T value=static_cast<T>(0)-T(ull(1));
 };
 
 template <typename T>

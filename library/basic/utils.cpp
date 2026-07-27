@@ -70,3 +70,20 @@ template <typename T> inline void Swap(T& val1,T& val2){
 }
 
 
+
+template <typename T>
+inline T Factorial(ull n){
+	static Array<T> arr;
+	if(arr.Length<=n){
+		for(ull i=arr.Length;i<=n;++i){
+			if(i==0) arr[i]=T(ull(1));
+			else{
+				arr[i]=arr[i-1]*i;
+			}
+		}
+	}
+	return arr[n];
+
+}
+
+

@@ -1,6 +1,7 @@
 #pragma once
 #include "base.cpp"
 
+
 constexpr inline size_t BiggerPower2(size_t num){
 	if(num==0) return 1;
 	int dig=64-std::countl_zero(num)-1;
@@ -39,7 +40,7 @@ constexpr inline size_t Log2<size_t>(size_t num){
 
 template <typename T> constexpr T Power(T val,size_t times){
 	if(times==0){
-		return One<T>; 
+		return T((ull)1); 
 	}
 	
 	T powers[64];
@@ -48,7 +49,7 @@ template <typename T> constexpr T Power(T val,size_t times){
 	for(size_t i=1;i<=maxdeg;++i){
 		powers[i]=powers[i-1]*powers[i-1];
 	}
-	T res=One<T>;
+	T res=T(ull(1));
 	for(size_t i=0;i<=maxdeg;++i){
 		if(times&((size_t)1<<i)){
 			res=res*powers[i];
@@ -58,7 +59,6 @@ template <typename T> constexpr T Power(T val,size_t times){
 	
 	
 }
-
 
 
 
