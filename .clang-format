@@ -1,0 +1,10 @@
+# Language指定なし(共通定義)。
+# 既定値としてLLVMを使用、インデントをスペース4つに指定する。
+BasedOnStyle: LLVM
+UseTab: ForIndentation
+IndentWidth: 2
+TabWidth: 2
+
+Language: Cpp
+DerivePointerAlignment: false
+PointerAlignment: Left

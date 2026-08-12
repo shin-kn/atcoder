@@ -1,5 +1,5 @@
-#thanks a lot for
-#https://github.com/AlexeyDmitriev/inline_includes/blob/master/inline_includes
+# thanks a lot for
+# https://github.com/AlexeyDmitriev/inline_includes/blob/master/inline_includes
 
 import sys
 import os
@@ -18,22 +18,22 @@ def include_target(file, path):
 
 
 def dfs(file):
-    file=os.path.abspath(file)
+    file = os.path.abspath(file)
     if file in USED:
         return
     USED.add(file)
     with open(file, "r") as f:
         for line in f:
             if line.startswith("#include "):
-                path = include_target(file, line[8:].strip("\n\r \"<>"))
+                path = include_target(file, line[8:].strip('\n\r "<>'))
                 if path is not None:
                     dfs(path)
                 else:
                     if not line.startswith("#pragma once"):
-                        print(line, end='')
+                        print(line, end="")
             else:
                 if not line.startswith("#pragma once"):
-                    print(line, end='')
+                    print(line, end="")
 
 
 def main():
@@ -42,5 +42,5 @@ def main():
     dfs(sys.argv[-1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

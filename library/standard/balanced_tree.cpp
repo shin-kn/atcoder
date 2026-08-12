@@ -1,515 +1,570 @@
 #pragma once
 #include "../basic.cpp"
-
-template  <typename T,typename U> class AVLTree{
-	static_assert(std::is_copy_assignable<T>::value);
-	static_assert(std::is_copy_assignable<U>::value);
-	public:
-		AVLTree();
-		ull Size=0;
-
-		void Push(T,U);
-
-		bool Find(T);
-		bool Leq(T);
-		bool Geq(T);
-		ull Number(){return CurrentNumber;}
-
-		void Delete();
-		T Index(){return Current->index;}
-		T Index(T ind){Find(ind);return Index();}
-		U& Data(){return Current->val;}
-		U& Data(T ind){Find(ind);return Data();}
-
-
-		Pair<T,U&> operator [](ull ind);
-
-		::Array<T> IndexArray();
-		::Array<U> DataArray();
-		::Array<Pair<T,U>> Array();
-
-
-
-
-
-		template <typename V>
-		AVLTree(V&& func){Init(std::forward<V>(func));}
-
-		template <typename V>
-		void Init(V&& func){is_small=FunctionType<bool(T,T)>(std::forward<V>(func));}
-
-
-		//internal things
-
-
-		FunctionType<bool(T,T)> is_small; 
-
-
-		
-
-		struct Node{
-			Node* child1;
-			Node* child2;
-			ull length;//used for balancing, >=1
-			ull weight;//used for an array like feature, >=1
-			T index;
-			U val;
-			void Clear();
-		};
-
-		::Array<Node> Nodes;
-
-
-		Node* Balance(Node* );
-		Node* LL_Rotate(Node *);
-		Node* LR_Rotate(Node *);
-		Node* RL_Rotate(Node *);
-		Node* RR_Rotate(Node *);
-
-
-		void Update(Node* );
-
-		Stack<Pair<Node*,bool>> FindRoutes; 
-
-		//return top of the node
-		//assume childrens of the node is balanced, and their weight and length are set correctly
-
-		Stack<Node*> AvailNodes;
-		Node* Root=nullptr;
-		Node* Current;
-		ull CurrentNumber; 
-
-		void Search(FunctionType<void(Node*)>);
-
-		template <typename F>
-		void Search(F&& func){Search(FunctionType<void(Node*)>(std::forward<F>(func)));}
-
-
-		//utils
-
-		inline ull length(Node* node){return node==nullptr?0:node->length;}
-		inline ull weight(Node* node){return node==nullptr?0:node->weight;}
-		inline bool leq(T ind1,T ind2){return !is_small(ind2,ind1);}
-		inline bool geq(T ind1,T ind2){return !is_small(ind1,ind2);}
-
+template <typename T, typename U> struct AVLTreeNode {
+	AVLTreeNode* child1;
+	AVLTreeNode* child2;
+	ull length; // used for balancing, >=1
+	ull weight; // used for an array like feature, >=1
+	T index;
+	U val;
+	void Clear();
 };
 
-
-template <typename T,typename U>
-Pair<T,U&> AVLTree<T,U>::operator [](ull index){
-	assert(index<Size);
-	Node* loc=Root;
-	ull counter=0;
-	while(true){
-		ull thisindex=weight(loc->child1)+counter;
-		if(thisindex==index) break;
-		if(thisindex<index){
-			counter+=weight(loc->child1)+1;
-			loc=loc->child2;
-			continue;
-		}
-		loc=loc->child1;
-	} 
-	Current=loc;
-	CurrentNumber=index;
-	return Pair<T,U&>(loc->index,loc->val);
+template <typename T, typename U> void AVLTreeNode<T, U>::Clear() {
+	child1 = nullptr;
+	child2 = nullptr;
+	weight = 1;
+	length = 1;
 }
 
+template <typename T, typename U,
+          FunctionConcept<bool, T, T> LessFunc = decltype(LTOp<T>),
+          typename BeforeChangeFunc =
+              decltype(DoNothingFunc<void, AVLTreeNode<T, U>*>),
+          typename AfterChangeFunc =
+              decltype(DoNothingFunc<void, AVLTreeNode<T, U>*>)>
+class AVLTree {
+public:
+	using Node = AVLTreeNode<T, U>;
+	AVLTree(TypeVar<T>, TypeVar<U>, LessFunc& less = LTOp<T>,
+	        BeforeChangeFunc& before_change = DoNothingFunc<void, Node*>,
+	        AfterChangeFunc& after_change = DoNothingFunc<void, Node*>,
+	        bool WithExtension = false)
+	    : less(less), before_change(before_change), after_change(after_change),
+	      WithExtension(WithExtension) {}
 
-template <typename T,typename U>
-::Array<Pair<T,U>> AVLTree<T,U>::Array(){
-	::Array<Pair<T,U>> arr;
+	ull Size = 0;
+
+	void Push(T, U);
+
+	bool Find(T);
+	bool Leq(T);
+	bool Geq(T);
+	ull Number() { return CurrentNumber; }
+
+	void Delete();
+	T Index() { return Current->index; }
+	T Index(T ind) {
+		Find(ind);
+		return Index();
+	}
+	U& Data() { return Current->val; }
+	U& Data(T ind) {
+		Find(ind);
+		return Data();
+	}
+
+	Pair<T, U&> operator[](ull ind); // equally, Nth
+
+	::Array<T> IndexArray();
+	::Array<U> DataArray();
+	::Array<Pair<T, U>> Array();
+
+	// internal things
+
+	LessFunc less;
+	// For Extension
+	BeforeChangeFunc before_change;
+	AfterChangeFunc after_change;
+
+	bool WithExtension;
+
+	::Array<Node> Nodes;
+
+	Node* Balance(Node*);
+	void BalanceRoutes(Node*);
+	// use FindRoutes
+
+	Node* LL_Rotate(Node*);
+	Node* LR_Rotate(Node*);
+	Node* RL_Rotate(Node*);
+	Node* RR_Rotate(Node*);
+
+	void Update(Node*);
+
+	Stack<Pair<Node*, bool>> FindRoutes;
+
+	// return top of the node
+	// assume childrens of the node is balanced, and their weight and length are
+	// set correctly
+
+	Stack<Node*> AvailNodes;
+	Node* Root = nullptr;
+	Node* Current;
+	ull CurrentNumber;
+
+	void DFS(FunctionType<void(Node*)>, FunctionType<bool(Node*)>);
+	// by the order of DFS, execute func for Node*
+
+	void BFS(FunctionType<bool(Node*)>);
+	// by the order of BFS, execute func for Node*
+
+	template <typename F> void DFS(F&& func) {
+		DFS(std::forward<F>(func), [&](Node*) -> bool { return true; });
+	}
+
+	::Array<Node*, true> dfs_loc;
+	::Array<ull, true> dfs_num;
+
+	Queue<Node*> bfs_queue;
+
+	// utils
+
+	inline ull length(Node* node) { return node == nullptr ? 0 : node->length; }
+	inline ull weight(Node* node) { return node == nullptr ? 0 : node->weight; }
+	inline bool leq(T ind1, T ind2) { return !less(ind2, ind1); }
+	inline bool geq(T ind1, T ind2) { return !less(ind1, ind2); }
+};
+
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+Pair<T, U&>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::operator[](
+    ull index) {
+	assert(index < Size);
+	Node* loc = Root;
+	ull counter = 0;
+	while (true) {
+		ull thisindex = weight(loc->child1) + counter;
+		if (thisindex == index)
+			break;
+		if (thisindex < index) {
+			counter += weight(loc->child1) + 1;
+			loc = loc->child2;
+			continue;
+		}
+		loc = loc->child1;
+	}
+	Current = loc;
+	CurrentNumber = index;
+	return Pair<T, U&>(loc->index, loc->val);
+}
+
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+::Array<Pair<T, U>>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Array() {
+	::Array<Pair<T, U>> arr;
 	arr.Allocate(Size);
-	auto append=[&](Node* node){
-		arr[arr.Length]=Pair<T,U>(node->index,node->val);	
+	auto append = [&](Node* node) {
+		arr[arr.Length] = Pair<T, U>(node->index, node->val);
 	};
-	Search(append);
+	DFS(append);
 	return arr;
 }
 
-template <typename T,typename U>
-::Array<U> AVLTree<T,U>::DataArray(){
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+::Array<U>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DataArray() {
 	::Array<U> arr;
 	arr.Allocate(Size);
-	auto append=[&](Node* node){
-		arr[arr.Length]=node->val;
-	};
-	Search(append);
+	auto append = [&](Node* node) { arr[arr.Length] = node->val; };
+	DFS(append);
 	return arr;
 }
 
-template <typename T,typename U>
-::Array<T> AVLTree<T,U>::IndexArray(){
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+::Array<T>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::IndexArray() {
 	::Array<T> arr;
 	arr.Allocate(Size);
-	auto append=[&](Node* node){
-		arr[arr.Length]=node->index;
-	};
-	Search(append);
+	auto append = [&](Node* node) { arr[arr.Length] = node->index; };
+	DFS(append);
 	return arr;
 }
 
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BFS(
+    FunctionType<bool(Node*)> func) {
+	if (Root == nullptr)
+		return;
+	bfs_queue.Clear();
+	bfs_queue.Push(Root);
+	while (bfs_queue.Size > 0) {
+		Node* node = bfs_queue.Pop();
+		if (!func(node))
+			continue;
+		if (node->child1 != nullptr)
+			bfs_queue.Push(node->child1);
+		if (node->child2 != nullptr)
+			bfs_queue.Push(node->child2);
+	}
+}
 
-
-template <typename T,typename U>
-void AVLTree<T,U>::Search(FunctionType<void(Node*)> func){
-	if(Size==0) return;
-	::Array<Node*,true> loc;
-	::Array<ull,true> num;
-	ull place=0;
-	loc(0)=Root;
-	num(0)=0;
-	while(true){
-		if(num[place]==2){
-			if(place==0) break;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DFS(
+    FunctionType<void(Node*)> func, FunctionType<bool(Node*)> canreach) {
+	if (!canreach(Root))
+		return;
+	if (Size == 0)
+		return;
+	dfs_loc.Length = 0;
+	dfs_num.Length = 0;
+	ull place = 0;
+	dfs_loc(0) = Root;
+	dfs_num(0) = 0;
+	while (true) {
+		if (dfs_num[place] == 2) {
+			if (place == 0)
+				break;
 			--place;
-			++num[place];
+			++dfs_num[place];
 			continue;
 		}
-		if(num[place]==1){
-			func(loc[place]);
+		if (dfs_num[place] == 1) {
+			func(dfs_loc[place]);
 		}
-		Node* togo=num[place]==0?loc[place]->child1:loc[place]->child2;
-		if(togo==nullptr){
-			++num[place];
+		Node* togo =
+		    dfs_num[place] == 0 ? dfs_loc[place]->child1 : dfs_loc[place]->child2;
+		if (togo == nullptr || !canreach(togo)) {
+			++dfs_num[place];
 			continue;
 		}
 		++place;
-		loc(place)=togo;
-		num(place)=0;
+		dfs_loc(place) = togo;
+		dfs_num(place) = 0;
 	}
 }
 
-template <typename T,typename U>
-AVLTree<T,U>::AVLTree(){
-	if constexpr (SmallerDefined<T>){
-		is_small=FunctionType<bool(T,T)>([](T val1,T val2)->bool{return val1<val2;});
-	}
-}
-
-
-
-template <typename T,typename U>
-void AVLTree<T,U>::Push(T index,U val){
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(T index,
+                                                                      U val) {
 	++Size;
-	Node* newnode=nullptr;
-	if(AvailNodes.Size>0){
-		newnode=AvailNodes.Pop();
-	}else{
-		newnode=&Nodes[Nodes.Length];
+	Node* newnode = nullptr;
+	if (AvailNodes.Size > 0) {
+		newnode = AvailNodes.Pop();
+	} else {
+		newnode = &Nodes[Nodes.Length];
 	}
 	newnode->Clear();
-	newnode->index=index;
-	newnode->val=val;
-	
-	CurrentNumber=0;
-	Current=newnode;
+	newnode->index = index;
+	newnode->val = val;
 
-	if(Root==nullptr){
-		Root=newnode;
+	if (WithExtension) {
+		after_change(newnode);
+	}
+
+	Current = newnode;
+
+	FindRoutes.Clear();
+
+	if (Root == nullptr) {
+		BalanceRoutes(newnode);
 		return;
 	}
 
-	
-
-	Node* loc=Root;
-	Stack<Pair<Node*,bool>> routes;//child is onleft
-	while(true){
-		if(is_small(index,loc->index)){
-			if(loc->child1==nullptr){
-				loc->child1=newnode;
+	Node* loc = Root;
+	while (true) {
+		if (less(index, loc->index)) {
+			if (loc->child1 == nullptr) {
+				loc->child1 = newnode;
 				break;
-			}else{
-				routes.Push(Pair<Node*,bool>(loc,true));
-				loc=loc->child1;
+			} else {
+				FindRoutes.Push(Pair<Node*, bool>(loc, true));
+				loc = loc->child1;
 			}
-		}else{
-			if(loc->child2==nullptr){
-				CurrentNumber+=weight(loc->child1)+1;
-				loc->child2=newnode;
+		} else {
+			if (loc->child2 == nullptr) {
+				loc->child2 = newnode;
 				break;
-			}else{
-				routes.Push(Pair<Node*,bool>(loc,false));
-				CurrentNumber+=weight(loc->child1)+1;
-				loc=loc->child2;
+			} else {
+				FindRoutes.Push(Pair<Node*, bool>(loc, false));
+				loc = loc->child2;
 			}
 		}
 	}
-	loc=Balance(loc);
-	while(routes.Size>0){
-		Pair<Node*,bool> route=routes.Pop();
-		Node* thisnode=route.val1;
-		(route.val2?thisnode->child1:thisnode->child2)=loc;
-		loc=Balance(thisnode);
-	}
-	Root=loc;
-
+	BalanceRoutes(loc);
 }
 
-template <typename T,typename U>
-bool AVLTree<T,U>::Leq(T index){
-	Node* BestCurrent=nullptr;
-	ull BestCurrentNumber=0;
-	Current=Root;
-	CurrentNumber=0;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Leq(T index) {
+	Node* BestCurrent = nullptr;
+	ull BestCurrentNumber = 0;
+	Current = Root;
+	CurrentNumber = 0;
 	FindRoutes.Clear();
-	while(true){
-		if(leq(Current->index,index)){
-			BestCurrent=Current;
-			BestCurrentNumber=CurrentNumber+weight(Current->child1);
-			FindRoutes.Push(Pair<Node*,bool>(Current,false));
-			CurrentNumber+=weight(Current->child1)+1;
-			if(Current->child2==nullptr) break;
-			Current=Current->child2;
-		}else{
-			FindRoutes.Push(Pair<Node*,bool>(Current,true));
-			if(Current->child1==nullptr) break;
-			Current=Current->child1;
+	while (true) {
+		if (leq(Current->index, index)) {
+			BestCurrent = Current;
+			BestCurrentNumber = CurrentNumber + weight(Current->child1);
+			FindRoutes.Push(Pair<Node*, bool>(Current, false));
+			CurrentNumber += weight(Current->child1) + 1;
+			if (Current->child2 == nullptr)
+				break;
+			Current = Current->child2;
+		} else {
+			FindRoutes.Push(Pair<Node*, bool>(Current, true));
+			if (Current->child1 == nullptr)
+				break;
+			Current = Current->child1;
 		}
 	}
-	if(BestCurrent==nullptr) return false;
-	if(BestCurrent!=Current){
-		while(true){
-			if(FindRoutes.Pop().val1==BestCurrent) break;
+	if (BestCurrent == nullptr)
+		return false;
+	if (BestCurrent != Current) {
+		while (true) {
+			if (FindRoutes.Pop().val1 == BestCurrent)
+				break;
 		}
 	}
-	Current=BestCurrent;
-	CurrentNumber=BestCurrentNumber;	
+	Current = BestCurrent;
+	CurrentNumber = BestCurrentNumber;
 	return true;
 }
 
-
-template <typename T,typename U>
-bool AVLTree<T,U>::Geq(T index){
-	Node* BestCurrent=nullptr;
-	ull BestCurrentNumber=0;
-	Current=Root;
-	CurrentNumber=0;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Geq(T index) {
+	Node* BestCurrent = nullptr;
+	ull BestCurrentNumber = 0;
+	Current = Root;
+	CurrentNumber = 0;
 	FindRoutes.Clear();
-	while(true){
-		if(geq(Current->index,index)){
-			BestCurrent=Current;
-			BestCurrentNumber=CurrentNumber+weight(Current->child1);
-			FindRoutes.Push(Pair<Node*,bool>(Current,true));
-			if(Current->child1==nullptr) break;
-			Current=Current->child1;
-		}else{
-			FindRoutes.Push(Pair<Node*,bool>(Current,false));
-			if(Current->child2==nullptr) break;
-			CurrentNumber+=weight(Current->child1)+1;
-			Current=Current->child2;
+	while (true) {
+		if (geq(Current->index, index)) {
+			BestCurrent = Current;
+			BestCurrentNumber = CurrentNumber + weight(Current->child1);
+			FindRoutes.Push(Pair<Node*, bool>(Current, true));
+			if (Current->child1 == nullptr)
+				break;
+			Current = Current->child1;
+		} else {
+			FindRoutes.Push(Pair<Node*, bool>(Current, false));
+			if (Current->child2 == nullptr)
+				break;
+			CurrentNumber += weight(Current->child1) + 1;
+			Current = Current->child2;
 		}
 	}
-	if(BestCurrent==nullptr) return false;
-	if(BestCurrent!=Current){
-		while(true){
-			if(FindRoutes.Pop().val1==BestCurrent) break;
+	if (BestCurrent == nullptr)
+		return false;
+	if (BestCurrent != Current) {
+		while (true) {
+			if (FindRoutes.Pop().val1 == BestCurrent)
+				break;
 		}
 	}
-	Current=BestCurrent;
-	CurrentNumber=BestCurrentNumber;	
+	Current = BestCurrent;
+	CurrentNumber = BestCurrentNumber;
 	return true;
 }
 
-template <typename T,typename U>
-bool AVLTree<T,U>::Find(T index){
-	Current=Root;
-	CurrentNumber=0;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Find(T index) {
+	Current = Root;
+	CurrentNumber = 0;
 	FindRoutes.Clear();
-	while(Current!=nullptr){
-		if(is_small(index,Current->index)){
-			FindRoutes.Push(Pair<Node*,bool>(Current,true));
-			Current=Current->child1;
+	while (Current != nullptr) {
+		if (less(index, Current->index)) {
+			FindRoutes.Push(Pair<Node*, bool>(Current, true));
+			Current = Current->child1;
 			continue;
 		}
-		if(is_small(Current->index,index)){
-			FindRoutes.Push(Pair<Node*,bool>(Current,false));
-			CurrentNumber+=weight(Current->child1)+1;
-			Current=Current->child2;
+		if (less(Current->index, index)) {
+			FindRoutes.Push(Pair<Node*, bool>(Current, false));
+			CurrentNumber += weight(Current->child1) + 1;
+			Current = Current->child2;
 			continue;
 		}
-		CurrentNumber+=weight(Current->child1);
+		CurrentNumber += weight(Current->child1);
 		break;
 	}
-	if(Current==nullptr){
-		return false; 
+	if (Current == nullptr) {
+		return false;
 	}
 	return true;
 }
 
-template <typename T,typename U>
-void AVLTree<T,U>::Delete(){
-	if(Current==nullptr) return;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Delete() {
+	if (Current == nullptr)
+		return;
 	--Size;
 	AvailNodes.Push(Current);
-	Node* loc=nullptr;
-	
-	if(Current->child1!=nullptr||Current->child2!=nullptr){
-		if(length(Current->child1)>length(Current->child2)){
-			//child1 is not nullptr
-			Node* loc_parent;
-			loc_parent=Current;
-			loc=Current->child1;
-			while(loc->child2!=nullptr){
-				loc_parent=loc;
-				loc=loc->child2;
-			}
-			if(loc_parent==Current){
-				//loc=Current->child1
-				loc->child2=Current->child2;
-				Update(loc);
-			}else{
-				loc_parent->child2=loc->child1;
-				loc->child1=Current->child1;
-				loc->child2=Current->child2;
-				FindRoutes.Push(Pair<Node*,bool>(loc,true));
-				Current=Current->child1;
-				while(Current!=loc_parent){
-					FindRoutes.Push(Pair<Node*,bool>(Current,false));
-					Current=Current->child2;
-				}
-				loc=Balance(loc_parent);
-			}
-		}else{
-			//child2 is not nullptr
-			Node* loc_parent;
-			loc_parent=Current;
-			loc=Current->child2;
-			while(loc->child1!=nullptr){
-				loc_parent=loc;
-				loc=loc->child1;
-			}
-			if(loc_parent==Current){
-				//loc=Current->child1
-				loc->child1=Current->child1;
-				Update(loc);
-			}else{
-				loc_parent->child1=loc->child2;
-				loc->child1=Current->child1;
-				loc->child2=Current->child2;
-				FindRoutes.Push(Pair<Node*,bool>(loc,false));
-				Current=Current->child2;
-				while(Current!=loc_parent){
-					FindRoutes.Push(Pair<Node*,bool>(Current,true));
-					Current=Current->child1;
-				}
-				loc=Balance(loc_parent);
-			}
-		}
-	}
-	while(FindRoutes.Size>0){
-		Pair<Node*,bool> route=FindRoutes.Pop();
-		Node* thisnode=route.val1;
-		(route.val2?thisnode->child1:thisnode->child2)=loc;
-		loc=Balance(thisnode);
-	}
-	Root=loc;
-	
 
+	if (WithExtension)
+		before_change(Current);
+
+	if (Current->child1 == nullptr) {
+		BalanceRoutes(Current->child2);
+		return;
+	}
+
+	if (Current->child1->child2 == nullptr) {
+		if (WithExtension)
+			before_change(Current->child1);
+
+		Current->child1->child2 = Current->child2;
+		BalanceRoutes(Current->child1);
+		return;
+	}
+
+	Node* loc = Current->child1;
+	while (loc->child2 != nullptr) {
+		if (WithExtension)
+			before_change(loc);
+
+		loc = loc->child2;
+	}
+	Node* n_current = loc;
+	n_current->child2 = Current->child2;
+
+	FindRoutes.Push(Pair<Node*, bool>(n_current, true));
+	loc = Current->child1;
+	while (loc->child2 != n_current) {
+		FindRoutes.Push(Pair<Node*, bool>(loc, false));
+		loc = loc->child2;
+	}
+	loc->child2 = n_current->child1;
+	BalanceRoutes(loc);
 }
 
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BalanceRoutes(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* loc) {
+	loc = Balance(loc);
 
+	while (FindRoutes.Size > 0) {
+		Pair<Node*, bool> route = FindRoutes.Pop();
+		Node* thisnode = route.val1;
+		(route.val2 ? thisnode->child1 : thisnode->child2) = loc;
+		loc = Balance(thisnode);
+	}
 
-template <typename T,typename U>
-AVLTree<T,U>::Node* AVLTree<T,U>::Balance(AVLTree<T,U>::Node* node){
-	if(node==nullptr) return nullptr;
-	if(Dist(length(node->child1),length(node->child2))>=2){
-		if(length(node->child1)>length(node->child2)){
-			//child 1 is longer => (child1 != nullptr)
-			if(length(node->child1->child1)>=length(node->child1->child2)){
-				//ll case
-				node=LL_Rotate(node);
-			}else{
-				//lr case
-				node=LR_Rotate(node);
+	Root = loc;
+}
+
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Balance(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+	if (node == nullptr)
+		return nullptr;
+	if (Dist(length(node->child1), length(node->child2)) >= 2) {
+		if (length(node->child1) > length(node->child2)) {
+			// child 1 is longer => (child1 != nullptr)
+			if (length(node->child1->child1) >= length(node->child1->child2)) {
+				// ll case
+				node = LL_Rotate(node);
+			} else {
+				// lr case
+				node = LR_Rotate(node);
 			}
-		}else{
-			//child 2 is longer
-			if(length(node->child2->child2)>=length(node->child2->child1)){
-				//rr case
-				node=RR_Rotate(node);
-			}else{
-				//rl case
-				node=RL_Rotate(node);
+		} else {
+			// child 2 is longer
+			if (length(node->child2->child2) >= length(node->child2->child1)) {
+				// rr case
+				node = RR_Rotate(node);
+			} else {
+				// rl case
+				node = RL_Rotate(node);
 			}
-
 		}
-	}else{
+	} else {
 		Update(node);
 	}
 	return node;
-	
-
-
-
 }
 
-template <typename T,typename U> 
-AVLTree<T,U>::Node* AVLTree<T,U>::LL_Rotate(AVLTree<T,U>::Node* node){
-	Node* newtop=node->child1;
-	node->child1=newtop->child2;
-	newtop->child2=node;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::LL_Rotate(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+	if (WithExtension) {
+		before_change(node);
+		before_change(node->child1);
+	}
+
+	Node* newtop = node->child1;
+	node->child1 = newtop->child2;
+	newtop->child2 = node;
 	Update(node);
 	Update(newtop);
 	return newtop;
 }
 
-template <typename T,typename U> 
-AVLTree<T,U>::Node* AVLTree<T,U>::LR_Rotate(AVLTree<T,U>::Node* node){
-	Node* newtop=node->child1->child2;
-	node->child1->child2=newtop->child1;
-	newtop->child1=node->child1;
-	node->child1=newtop->child2;
-	newtop->child2=node;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::LR_Rotate(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+	if (WithExtension) {
+		before_change(node);
+		before_change(node->child1);
+		before_change(node->child1->child2);
+	}
+
+	Node* newtop = node->child1->child2;
+	node->child1->child2 = newtop->child1;
+	newtop->child1 = node->child1;
+	node->child1 = newtop->child2;
+	newtop->child2 = node;
 	Update(newtop->child1);
 	Update(newtop->child2);
 	Update(newtop);
 	return newtop;
 }
 
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::RR_Rotate(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+	if (WithExtension) {
+		before_change(node);
+		before_change(node->child2);
+	}
 
-
-
-
-template <typename T,typename U> 
-AVLTree<T,U>::Node* AVLTree<T,U>::RR_Rotate(AVLTree<T,U>::Node* node){
-	Node* newtop=node->child2;
-	node->child2=newtop->child1;
-	newtop->child1=node;
+	Node* newtop = node->child2;
+	node->child2 = newtop->child1;
+	newtop->child1 = node;
 	Update(node);
 	Update(newtop);
 	return newtop;
 }
 
-
-template <typename T,typename U> 
-AVLTree<T,U>::Node* AVLTree<T,U>::RL_Rotate(AVLTree<T,U>::Node* node){
-	Node* newtop=node->child2->child1;
-	node->child2->child1=newtop->child2;
-	newtop->child2=node->child2;
-	node->child2=newtop->child1;
-	newtop->child1=node;
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::RL_Rotate(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+	if (WithExtension) {
+		before_change(node);
+		before_change(node->child2);
+		before_change(node->child2->child1);
+	}
+	Node* newtop = node->child2->child1;
+	node->child2->child1 = newtop->child2;
+	newtop->child2 = node->child2;
+	node->child2 = newtop->child1;
+	newtop->child1 = node;
 	Update(newtop->child1);
 	Update(newtop->child2);
 	Update(newtop);
 	return newtop;
 }
 
-template <typename T, typename U>
-void AVLTree<T,U>::Update(AVLTree<T,U>::Node* node){
-	if(node==nullptr) return;
-	node->weight=weight(node->child1)+weight(node->child2)+1;
-	node->length=Max(length(node->child1),length(node->child2))+1;
-}
+template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
+          typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Update(
+    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+	if (node == nullptr)
+		return;
+	node->weight = weight(node->child1) + weight(node->child2) + 1;
+	node->length = Max(length(node->child1), length(node->child2)) + 1;
 
-
-
-
-
-template <typename T,typename U>
-void AVLTree<T,U>::Node::Clear(){
-	child1=nullptr;
-	child2=nullptr;
-	weight=1;
-	length=1;
+	if (WithExtension) {
+		after_change(node);
+	}
 }
