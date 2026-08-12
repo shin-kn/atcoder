@@ -13,10 +13,10 @@ template <typename T>
 auto MaxOp = [](T val1, T val2) -> T { return Max(val1, val2); };
 
 template <typename T>
-auto LTOp = [](T val1, T val2) -> T { return val1 < val2; };
+auto LTOp = [](T val1, T val2) -> bool { return val1 < val2; };
 
 template <typename T>
-auto GTOp = [](T val1, T val2) -> T { return val1 > val2; };
+auto GTOp = [](T val1, T val2) -> bool { return val1 > val2; };
 
 template <typename TResult, typename... TArgs>
 auto DoNothingFunc = [](TArgs... args) { return TResult(); };

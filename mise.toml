@@ -1,2 +1,6 @@
 [tasks.format]
 run=["clang-format -i *.cpp library/*.cpp library/basic/*.cpp library/standard/*.cpp library/advanced/*.cpp"]
+
+[tasks.init]
+
+run=["cp solve_default.cpp solve.cpp"]

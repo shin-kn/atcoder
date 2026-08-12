@@ -1,14 +1,42 @@
 #include "../standard.cpp"
 
-template <typename T, typename U, typename V>
-// T: index, U: value, V:action
-class LazySegmentAVLTree {
-public:
-	LazySegmentAVLTree() {}
+template <typename T, typename U, typename V> struct LazySegmentAVLTreeCell {
+	T ind_min;
+	T ind_max;
+	U val;
+	U sum;
+	V act;
+	bool act_is_null;
+};
 
-	template <typename... Args> LazySegmentAVLTree(Args&&... args) {
-		Init(std::forward<Args>(args)...);
-	}
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+// T: index, U: value, V:action
+class LazySegmentAVLTreeClass {
+public:
+	LazySegmentAVLTreeClass(
+	  TypeVar<T>,
+	  TypeVar<U>,
+	  TypeVar<V>,
+	  AddOp& add,
+	  FuncOp& func,
+	  ConvoluteOp& convolute,
+	  PropagateOp& propagate,
+	  ExecuteOp& execute,
+	  RefreshOp& refresh,
+	  BeforeChangeOp& before_change,
+	  AfterChangeOp& afterchange
+	);
 
 	template <typename AddFunc, typename Func, typename ConvoluteFunc>
 	void Init(AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc);
@@ -26,26 +54,26 @@ public:
 
 	void GetRange(T, T);
 
-	struct Cell {
-		T ind_min;
-		T ind_max;
-		U val;
-		U sum;
-		V act;
-		bool act_is_null;
-	};
+	using Cell = LazySegmentAVLTreeCell<T, U, V>;
 
-	AVLTree<T, Cell, true> avltree;
+	using AVLTree =
+	  AVLTree<T, Cell, decltype(LTOp<T>), BeforeChangeOp, AfterChangeOp>;
 
-	using Node = AVLTree<T, Cell, true>::Node;
+	using Node = AVLTree::Node;
 
-	FunctionType<U(U, U)> add;
-	FunctionType<U(V, U)> func;
-	FunctionType<V(V, V)> convolute; // f,g -> f*g
+	AddOp add;
+	FuncOp func;
+	ConvoluteOp convolute; // f,g -> f*g
 
-	FunctionType<void(Node*)> propagate;
-	FunctionType<void(Node*)> execute;
-	FunctionType<void(Node*)> refresh;
+	PropagateOp propagate;
+	ExecuteOp execute;
+	RefreshOp refresh;
+
+	BeforeChangeOp before_change;
+	AfterChangeOp after_change;
+
+	AVLTree avltree;
+
 	void ExecuteAndRefreshAll();
 
 	Stack<Node*> ToBeExecuted;  //
@@ -53,8 +81,76 @@ public:
 	Queue<Pair<U*, Node*>> TargetRange;
 };
 
-template <typename T, typename U, typename V>
-void LazySegmentAVLTree<T, U, V>::GetRange(T start, T end) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::
+  LazySegmentAVLTreeClass(
+    TypeVar<T>,
+    TypeVar<U>,
+    TypeVar<V>,
+    AddOp& add,
+    FuncOp& func,
+    ConvoluteOp& convolute,
+    PropagateOp& propagate,
+    ExecuteOp& execute,
+    RefreshOp& refresh,
+    BeforeChangeOp& before_change,
+    AfterChangeOp& after_change
+  )
+    : add(add), func(func), convolute(convolute), propagate(propagate),
+      execute(execute), refresh(refresh), before_change(before_change),
+      after_change(after_change),
+      avltree(
+
+        AVLTree(Type<T>, Type<Cell>, LTOp<T>, before_change, after_change, true)
+
+      ) {}
+
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+void LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::GetRange(T start, T end) {
 	auto bfs_runner = [&](Node* node) -> bool {
 		Cell& cell = node->val;
 		if (cell.ind_max < start || end < cell.ind_min) {
@@ -75,7 +171,7 @@ void LazySegmentAVLTree<T, U, V>::GetRange(T start, T end) {
 
 	avltree.BFS(bfs_runner);
 
-	auto dfs_func = [&](Node* node) {};
+	auto dfs_func = [=](Node* node) {};
 	auto dfs_canreach = [&](Node* node) -> bool {
 		Cell& cell = node->val;
 		if (cell.ind_max < start || end < cell.ind_min) {
@@ -93,8 +189,30 @@ void LazySegmentAVLTree<T, U, V>::GetRange(T start, T end) {
 	avltree.DFS(dfs_func, dfs_canreach);
 }
 
-template <typename T, typename U, typename V>
-void LazySegmentAVLTree<T, U, V>::ExecuteAndRefreshAll() {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+void LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::ExecuteAndRefreshAll() {
 	while (ToBeExecuted.Size > 0) {
 		execute(ToBeExecuted.Pop());
 	}
@@ -103,8 +221,30 @@ void LazySegmentAVLTree<T, U, V>::ExecuteAndRefreshAll() {
 	}
 }
 
-template <typename T, typename U, typename V>
-U LazySegmentAVLTree<T, U, V>::Eval(T start, T end) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+U LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Eval(T start, T end) {
 	GetRange(start, end);
 	ExecuteAndRefreshAll();
 	if (TargetRange.Size == 0)
@@ -116,8 +256,30 @@ U LazySegmentAVLTree<T, U, V>::Eval(T start, T end) {
 	return counter;
 }
 
-template <typename T, typename U, typename V>
-inline void LazySegmentAVLTree<T, U, V>::Action(V action, T start, T end) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+inline void LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Action(V action, T start, T end) {
 	GetRange(start, end);
 	while (TargetRange.Size > 0) {
 		Pair<U*, Node*> loc = TargetRange.Pop();
@@ -136,8 +298,30 @@ inline void LazySegmentAVLTree<T, U, V>::Action(V action, T start, T end) {
 	ExecuteAndRefreshAll();
 }
 
-template <typename T, typename U, typename V>
-void LazySegmentAVLTree<T, U, V>::Push(T ind, U val) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+void LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Push(T ind, U val) {
 	Cell cell;
 	cell.val = val;
 	cell.act_is_null = true;
@@ -145,36 +329,133 @@ void LazySegmentAVLTree<T, U, V>::Push(T ind, U val) {
 	avltree.Push(ind, cell);
 }
 
-template <typename T, typename U, typename V>
-bool LazySegmentAVLTree<T, U, V>::Find(T ind) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+bool LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Find(T ind) {
 	return avltree.Find(ind);
 }
 
-template <typename T, typename U, typename V>
-bool LazySegmentAVLTree<T, U, V>::Leq(T ind) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+bool LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Leq(T ind) {
 	return avltree.Leq(ind);
 }
 
-template <typename T, typename U, typename V>
-bool LazySegmentAVLTree<T, U, V>::Geq(T ind) {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+bool LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Geq(T ind) {
 	return avltree.Geq(ind);
 }
 
-template <typename T, typename U, typename V>
-void LazySegmentAVLTree<T, U, V>::Delete() {
+template <
+  typename T,
+  typename U,
+  typename V,
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp,
+  typename PropagateOp,
+  typename ExecuteOp,
+  typename RefreshOp,
+  typename BeforeChangeOp,
+  typename AfterChangeOp>
+void LazySegmentAVLTreeClass<
+  T,
+  U,
+  V,
+  AddOp,
+  FuncOp,
+  ConvoluteOp,
+  PropagateOp,
+  ExecuteOp,
+  RefreshOp,
+  BeforeChangeOp,
+  AfterChangeOp>::Delete() {
 	avltree.Delete();
 }
 
-template <typename T, typename U, typename V>
-template <typename AddFunc, typename Func, typename ConvoluteFunc>
-void LazySegmentAVLTree<T, U, V>::Init(
-  AddFunc&& addfunc, Func&& funcfunc, ConvoluteFunc&& convolutefunc
+template <
+  typename T,
+  typename U,
+  typename V,
+  typename AddOp,
+  typename FuncOp,
+  typename ConvoluteOp>
+auto LazySegmentAVLTree(
+  TypeVar<T>,
+  TypeVar<U>,
+  TypeVar<V>,
+  AddOp&& add,
+  FuncOp&& func,
+  ConvoluteOp&& convolute
 ) {
-	add = FunctionType<U(U, U)>(std::forwat rd<AddFunc>(addfunc));
-	func = FunctionType<U(V, U)>(std::forward<Func>(funcfunc));
-	convolute = FunctionType<V(V, V)>(std::forward<ConvoluteFunc>(convolutefunc));
 
-	auto propagate_lambda = [&](Node* node) {
+	using Cell = LazySegmentAVLTreeCell<T, U, V>;
+	using Node = AVLTreeNode<T, Cell>;
+	auto propagate = [=](Node* node) {
 		if (node == nullptr)
 			return;
 
@@ -201,9 +482,7 @@ void LazySegmentAVLTree<T, U, V>::Init(
 		}
 	};
 
-	propagate = FunctionType<void(Node*)>(propagate_lambda);
-
-	auto execute_lambda = [&](Node* node) {
+	auto execute = [=](Node* node) {
 		if (node == nullptr)
 			return;
 		Cell& cell = node->val;
@@ -213,9 +492,7 @@ void LazySegmentAVLTree<T, U, V>::Init(
 		propagate(node);
 	};
 
-	execute = FunctionType<void(Node*)>(execute_lambda);
-
-	auto refresh_lambda = [&](Node* node) {
+	auto refresh = [=](Node* node) {
 		Cell& cell = node->val;
 		cell.sum = cell.val;
 		if (node->child1 != nullptr) {
@@ -232,16 +509,22 @@ void LazySegmentAVLTree<T, U, V>::Init(
 			cell.ind_max = node->child2->val.ind_max;
 	};
 
-	refresh = FunctionType<void(Node*)>(refresh_lambda);
+	decltype(propagate)& before_change(propagate);
 
-	avltree.before_change = FunctionType<void(Node*)>(propagate);
-
-	auto after_change_lambda = [&](Node* node) {
+	auto after_change = [=](Node* node) {
 		if (node == nullptr)
 			return;
 		execute(node->child1);
 		execute(node->child2);
 		refresh(node);
 	};
-	avltree.after_change = FunctionType<void(Node*)>(after_change_lambda);
+
+	LazySegmentAVLTreeClass<
+	  T, U, V, AddOp, FuncOp, ConvoluteOp, decltype(propagate), decltype(execute),
+	  decltype(refresh), decltype(before_change), decltype(after_change)>
+	  segtree(
+	    Type<T>, Type<U>, Type<V>, add, func, convolute, propagate, execute,
+	    refresh, before_change, after_change
+	  );
+	return segtree;
 }
