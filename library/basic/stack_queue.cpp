@@ -3,7 +3,7 @@
 
 template <typename T> class Stack {
 public:
-	Array<T, true> Arr;
+	::Array<T, true> Arr;
 	size_t Size = 0;
 	void Push(T);
 	T Pop();
@@ -20,7 +20,9 @@ public:
 		Arr = std::move(other.Arr);
 		Size = other.Size;
 		other.Size = 0;
+		return *this;
 	}
+
 	Stack(Stack& other) = delete;
 	Stack& operator=(Stack& other) = delete;
 };

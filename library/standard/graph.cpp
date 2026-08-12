@@ -186,7 +186,6 @@ Array<ull> Graph<T, U>::SCC(Graph<T2, U2>& newgraph) {
 	}
 	for (ull i = 0; i < res_index; ++i)
 		newgraph.Push(i);
-	return res;
 	for (ull i = 0; i < Edges.Length; ++i) {
 		newgraph.Connect(res[Edges[i].From], res[Edges[i].To]);
 	}

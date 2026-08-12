@@ -52,14 +52,12 @@ public:
 	U Eval(T, T);
 	void Action(V, T, T);
 
-	void GetRange(T, T);
-
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;
 
 	using AVLTree =
 	  AVLTree<T, Cell, decltype(LTOp<T>), BeforeChangeOp, AfterChangeOp>;
 
-	using Node = AVLTree::Node;
+	using Node = AVLTreeNode<T, Cell>;
 
 	AddOp add;
 	FuncOp func;
@@ -122,72 +120,8 @@ LazySegmentAVLTreeClass<
       execute(execute), refresh(refresh), before_change(before_change),
       after_change(after_change),
       avltree(
-
         AVLTree(Type<T>, Type<Cell>, LTOp<T>, before_change, after_change, true)
-
       ) {}
-
-template <
-  typename T,
-  typename U,
-  typename V,
-  FunctionConcept<U, U, U> AddOp,
-  FunctionConcept<U, V, U> FuncOp,
-  FunctionConcept<V, V, V> ConvoluteOp,
-  typename PropagateOp,
-  typename ExecuteOp,
-  typename RefreshOp,
-  typename BeforeChangeOp,
-  typename AfterChangeOp>
-void LazySegmentAVLTreeClass<
-  T,
-  U,
-  V,
-  AddOp,
-  FuncOp,
-  ConvoluteOp,
-  PropagateOp,
-  ExecuteOp,
-  RefreshOp,
-  BeforeChangeOp,
-  AfterChangeOp>::GetRange(T start, T end) {
-	auto bfs_runner = [&](Node* node) -> bool {
-		Cell& cell = node->val;
-		if (cell.ind_max < start || end < cell.ind_min) {
-			ToBeExecuted.Push(node);
-		}
-		if (start <= cell.ind_min && end >= cell.ind_max) {
-			ToBeExecuted.Push(node);
-			return false;
-		}
-		propagate(node);
-		ToBeRefreshed.Push(node);
-		return true;
-	};
-
-	ToBeExecuted.Clear();
-	ToBeRefreshed.Clear();
-	TargetRange.Clear();
-
-	avltree.BFS(bfs_runner);
-
-	auto dfs_func = [=](Node* node) {};
-	auto dfs_canreach = [&](Node* node) -> bool {
-		Cell& cell = node->val;
-		if (cell.ind_max < start || end < cell.ind_min) {
-			return false;
-		}
-		if (start <= cell.ind_min && end >= cell.ind_max) {
-			TargetRange.Push(Pair<U*, Node*>(&(cell.sum), node));
-			return false;
-		}
-		if (start <= node->index && end >= node->index) {
-			TargetRange.Push(Pair<U*, Node*>(&(cell.val), nullptr));
-		}
-		return true;
-	};
-	avltree.DFS(dfs_func, dfs_canreach);
-}
 
 template <
   typename T,
@@ -245,14 +179,32 @@ U LazySegmentAVLTreeClass<
   RefreshOp,
   BeforeChangeOp,
   AfterChangeOp>::Eval(T start, T end) {
-	GetRange(start, end);
-	ExecuteAndRefreshAll();
-	if (TargetRange.Size == 0)
+	if (avltree.Root == nullptr)
 		return U();
-	U counter = *(TargetRange.Pop().val1);
-	while (TargetRange.Size > 0) {
-		counter = add(counter, *(TargetRange.Pop().val1));
-	}
+	U counter = U();
+	auto dfs = [&](auto&& self, Node* node) -> void {
+		if (node == nullptr)
+			return;
+		Cell& cell = node->val;
+		if (cell.ind_max < start || end < cell.ind_min) { // out of range
+			execute(node);
+			return;
+		}
+		if (start <= cell.ind_min && end >= cell.ind_max) { // in the range
+			execute(node);
+			counter = add(counter, cell.sum);
+			return;
+		}
+		// else
+		propagate(node);
+		self(self, node->child1);
+		if (start <= node->index && end >= node->index) {
+			counter = add(counter, cell.val);
+		}
+		self(self, node->child2);
+		refresh(node);
+	};
+	dfs(dfs, avltree.Root);
 	return counter;
 }
 
@@ -280,22 +232,36 @@ inline void LazySegmentAVLTreeClass<
   RefreshOp,
   BeforeChangeOp,
   AfterChangeOp>::Action(V action, T start, T end) {
-	GetRange(start, end);
-	while (TargetRange.Size > 0) {
-		Pair<U*, Node*> loc = TargetRange.Pop();
-		if (loc.val2 == nullptr) {
-			*(loc.val1) = func(action, *(loc.val1));
-		} else {
-			Cell& cell = loc.val2->val;
+	if (avltree.Root == nullptr)
+		return;
+	auto dfs = [&](auto&& self, Node* node) -> void {
+		if (node == nullptr)
+			return;
+		Cell& cell = node->val;
+		if (cell.ind_max < start || end < cell.ind_min) { // out of range
+			execute(node);
+			return;
+		}
+		if (start <= cell.ind_min && end >= cell.ind_max) { // in the range
 			if (cell.act_is_null) {
 				cell.act = action;
 			} else {
 				cell.act = convolute(action, cell.act);
 			}
 			cell.act_is_null = false;
+			execute(node);
+			return;
 		}
-	}
-	ExecuteAndRefreshAll();
+		// else
+		propagate(node);
+		self(self, node->child1);
+		if (start <= node->index && end >= node->index) {
+			cell.val = func(action, cell.val);
+		}
+		self(self, node->child2);
+		refresh(node);
+	};
+	dfs(dfs, avltree.Root);
 }
 
 template <
@@ -441,16 +407,16 @@ template <
   typename T,
   typename U,
   typename V,
-  typename AddOp,
-  typename FuncOp,
-  typename ConvoluteOp>
+  FunctionConcept<U, U, U> AddOp,
+  FunctionConcept<U, V, U> FuncOp,
+  FunctionConcept<V, V, V> ConvoluteOp>
 auto LazySegmentAVLTree(
   TypeVar<T>,
   TypeVar<U>,
   TypeVar<V>,
-  AddOp&& add,
-  FuncOp&& func,
-  ConvoluteOp&& convolute
+  AddOp& add,
+  FuncOp& func,
+  ConvoluteOp& convolute
 ) {
 
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;
@@ -509,7 +475,7 @@ auto LazySegmentAVLTree(
 			cell.ind_max = node->child2->val.ind_max;
 	};
 
-	decltype(propagate)& before_change(propagate);
+	decltype(propagate) before_change(propagate);
 
 	auto after_change = [=](Node* node) {
 		if (node == nullptr)

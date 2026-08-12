@@ -296,6 +296,7 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(
 
 	Node* loc = Root;
 	while (true) {
+		before_change(loc);
 		if (less(index, loc->index)) {
 			if (loc->child1 == nullptr) {
 				loc->child1 = newnode;
@@ -324,6 +325,8 @@ template <
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
 bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Leq(T index) {
+	if (Root == nullptr)
+		return false;
 	Node* BestCurrent = nullptr;
 	ull BestCurrentNumber = 0;
 	Current = Root;
@@ -365,6 +368,8 @@ template <
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
 bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Geq(T index) {
+	if (Root == nullptr)
+		return false;
 	Node* BestCurrent = nullptr;
 	ull BestCurrentNumber = 0;
 	Current = Root;
@@ -406,6 +411,8 @@ template <
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
 bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Find(T index) {
+	if (Root == nullptr)
+		return false;
 	Current = Root;
 	CurrentNumber = 0;
 	FindRoutes.Clear();
@@ -467,6 +474,8 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Delete() {
 		loc = loc->child2;
 	}
 	Node* n_current = loc;
+	if (WithExtension)
+		before_change(n_current);
 	n_current->child2 = Current->child2;
 
 	FindRoutes.Push(Pair<Node*, bool>(n_current, true));
