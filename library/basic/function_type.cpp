@@ -45,13 +45,15 @@ public:
 		Func = new callable<TResult(TArgs...), TResult (*)(TArgs...)>(func);
 	}
 
-	template <typename T,
-	typename std::enable_if<!std::is_same<FunctionType, T>::value, int>::type
-	unused = 0>
+	template <
+	  typename T,
+	  typename std::enable_if<!std::is_same<FunctionType, T>::value, int>::type
+	    unused = 0>
 	FunctionType(T&& func) {
 		Func =
-		new callable<TResult(TArgs...), typename std::remove_reference<T>::type>(
-		std::forward<T>(func));
+		  new callable<TResult(TArgs...), typename std::remove_reference<T>::type>(
+		    std::forward<T>(func)
+		  );
 	}
 
 	~FunctionType() {

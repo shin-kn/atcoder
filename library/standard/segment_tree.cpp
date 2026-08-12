@@ -140,14 +140,18 @@ public:
 
 	template <typename AddFunc, typename Func, typename ConvoluteFunc>
 	LazySegmentTree(
-	ull N, T val, AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc) {
-		Init(N, val, std::forward<AddFunc>(addfunc), std::forward<Func>(func),
-		std::forward<ConvoluteFunc>(convolutefunc));
+	  ull N, T val, AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc
+	) {
+		Init(
+		  N, val, std::forward<AddFunc>(addfunc), std::forward<Func>(func),
+		  std::forward<ConvoluteFunc>(convolutefunc)
+		);
 	}
 
 	template <typename AddFunc, typename Func, typename ConvoluteFunc>
 	void Init(
-	ull N, T val, AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc);
+	  ull N, T val, AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc
+	);
 
 	T Eval(ull, ull); // evaluate [a,b]
 	void Action(U, ull, ull);
@@ -181,8 +185,13 @@ private:
 
 template <typename T, typename U>
 template <typename AddFunc, typename Func, typename ConvoluteFunc>
-void LazySegmentTree<T, U>::Init(ull N, T init_val, AddFunc&& addfunc,
-Func&& funcfunc, ConvoluteFunc&& convolutefunc) {
+void LazySegmentTree<T, U>::Init(
+  ull N,
+  T init_val,
+  AddFunc&& addfunc,
+  Func&& funcfunc,
+  ConvoluteFunc&& convolutefunc
+) {
 	add = FunctionType<T(T, T)>(std::forward<AddFunc>(addfunc));
 	func = FunctionType<T(U, T)>(std::forward<Func>(funcfunc));
 	convolute = FunctionType<U(U, U)>(std::forward<ConvoluteFunc>(convolutefunc));
