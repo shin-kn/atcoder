@@ -127,8 +127,8 @@ void SortByKey(Array<T>& arr1, Array<U>& arr2, bool Smaller = true) {
 	}
 }
 template <typename T, typename U, typename V>
-void SortByKey(Array<T>& arr1, Array<U>& arr2, Array<V>& arr3,
-               bool Smaller = true) {
+void SortByKey(
+Array<T>& arr1, Array<U>& arr2, Array<V>& arr3, bool Smaller = true) {
 	class Wrapper {
 		Array<T>* arr;
 

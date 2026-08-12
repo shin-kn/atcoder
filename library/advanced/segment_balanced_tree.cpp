@@ -167,8 +167,8 @@ void LazySegmentAVLTree<T, U, V>::Delete() {
 
 template <typename T, typename U, typename V>
 template <typename AddFunc, typename Func, typename ConvoluteFunc>
-void LazySegmentAVLTree<T, U, V>::Init(AddFunc&& addfunc, Func&& funcfunc,
-                                       ConvoluteFunc&& convolutefunc) {
+void LazySegmentAVLTree<T, U, V>::Init(
+AddFunc&& addfunc, Func&& funcfunc, ConvoluteFunc&& convolutefunc) {
 	add = FunctionType<U(U, U)>(std::forward<AddFunc>(addfunc));
 	func = FunctionType<U(V, U)>(std::forward<Func>(funcfunc));
 	convolute = FunctionType<V(V, V)>(std::forward<ConvoluteFunc>(convolutefunc));

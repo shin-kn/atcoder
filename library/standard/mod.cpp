@@ -135,14 +135,14 @@ public:
 			std::exit(EXIT_FAILURE);
 		if constexpr (IsMont) {
 			return Raw(static_cast<size_t>(
-			    static_cast<signed long long int>(P) +
-			    ((AxBy(static_cast<signed long long int>(Montgomery(Montgomery(val))),
-			           static_cast<signed long long int>(P)))[0])));
+			static_cast<signed long long int>(P) +
+			((AxBy(static_cast<signed long long int>(Montgomery(Montgomery(val))),
+			static_cast<signed long long int>(P)))[0])));
 		} else {
-			return Raw(static_cast<size_t>(
-			    static_cast<signed long long int>(P) +
-			    ((AxBy(static_cast<signed long long int>(val),
-			           static_cast<signed long long int>(P)))[0])));
+			return Raw(
+			static_cast<size_t>(static_cast<signed long long int>(P) +
+			                    ((AxBy(static_cast<signed long long int>(val),
+			                    static_cast<signed long long int>(P)))[0])));
 		}
 	}
 
@@ -167,8 +167,8 @@ template <size_t P> std::ostream& operator<<(std::ostream& os, Mod<P> val) {
 }
 
 template <size_t P>
-inline LightArray<Mod<P>> fouriertransform_freq(Array<Mod<P>>& arr,
-                                                size_t degree, Mod<P> zeta) {
+inline LightArray<Mod<P>> fouriertransform_freq(
+Array<Mod<P>>& arr, size_t degree, Mod<P> zeta) {
 	size_t length = 1 << degree;
 
 	Mod<P>** res = new (std::nothrow) Mod<P>*[degree + 1];
@@ -248,8 +248,8 @@ inline LightArray<Mod<P>> fouriertransform_freq(Array<Mod<P>>& arr,
 }
 
 template <size_t P>
-inline LightArray<Mod<P>> fouriertransform_time(Array<Mod<P>>& arr,
-                                                size_t degree, Mod<P> zeta) {
+inline LightArray<Mod<P>> fouriertransform_time(
+Array<Mod<P>>& arr, size_t degree, Mod<P> zeta) {
 	size_t length = 1 << degree;
 
 	Mod<P>** res = new (std::nothrow) Mod<P>*[degree + 1];

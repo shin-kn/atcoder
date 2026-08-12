@@ -22,8 +22,8 @@ public:
 		Degree = deg;
 	}
 
-	FormalPowerSeries
-	operator*(FormalPowerSeries& other) { // convolution of Degree(deg)
+	FormalPowerSeries operator*(
+	FormalPowerSeries& other) { // convolution of Degree(deg)
 		size_t deg = Max(Degree, other.Degree);
 		size_t length = BiggerPower2(deg * 2 + 1);
 
@@ -33,14 +33,14 @@ public:
 			other.arr.Set(other.Degree + 1, length, Mod<P>().Set(0));
 			// NTT
 			size_t loglength = Log2(length);
-			Mod<P> zeta = Power(Mod<P>().Set((size_t)15311432),
-			                    ((size_t)1 << (23 - loglength)));
+			Mod<P> zeta =
+			Power(Mod<P>().Set((size_t)15311432), ((size_t)1 << (23 - loglength)));
 
 			LightArray<Mod<P>> arr1 =
-			    fouriertransform_freq(arr, loglength, Mod<P>().Set(1) / zeta);
+			fouriertransform_freq(arr, loglength, Mod<P>().Set(1) / zeta);
 
 			LightArray<Mod<P>> arr2 =
-			    fouriertransform_freq(other.arr, loglength, Mod<P>().Set(1) / zeta);
+			fouriertransform_freq(other.arr, loglength, Mod<P>().Set(1) / zeta);
 
 			Array<Mod<P>> arr3(length);
 			Mod<P> div = Mod<P>().Set(length).Inv();

@@ -5,6 +5,8 @@ UseTab: ForIndentation
 IndentWidth: 2
 TabWidth: 2
 
+ContinuationIndentWidth: 0
+AlignAfterOpenBracket: DontAlign
 Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left

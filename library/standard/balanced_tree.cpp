@@ -18,18 +18,16 @@ template <typename T, typename U> void AVLTreeNode<T, U>::Clear() {
 }
 
 template <typename T, typename U,
-          FunctionConcept<bool, T, T> LessFunc = decltype(LTOp<T>),
-          typename BeforeChangeFunc =
-              decltype(DoNothingFunc<void, AVLTreeNode<T, U>*>),
-          typename AfterChangeFunc =
-              decltype(DoNothingFunc<void, AVLTreeNode<T, U>*>)>
+FunctionConcept<bool, T, T> LessFunc = decltype(LTOp<T>),
+typename BeforeChangeFunc = decltype(DoNothingFunc<void, AVLTreeNode<T, U>*>),
+typename AfterChangeFunc = decltype(DoNothingFunc<void, AVLTreeNode<T, U>*>)>
 class AVLTree {
 public:
 	using Node = AVLTreeNode<T, U>;
 	AVLTree(TypeVar<T>, TypeVar<U>, LessFunc& less = LTOp<T>,
-	        BeforeChangeFunc& before_change = DoNothingFunc<void, Node*>,
-	        AfterChangeFunc& after_change = DoNothingFunc<void, Node*>,
-	        bool WithExtension = false)
+	BeforeChangeFunc& before_change = DoNothingFunc<void, Node*>,
+	AfterChangeFunc& after_change = DoNothingFunc<void, Node*>,
+	bool WithExtension = false)
 	    : less(less), before_change(before_change), after_change(after_change),
 	      WithExtension(WithExtension) {}
 
@@ -117,10 +115,10 @@ public:
 };
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 Pair<T, U&>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::operator[](
-    ull index) {
+ull index) {
 	assert(index < Size);
 	Node* loc = Root;
 	ull counter = 0;
@@ -141,7 +139,7 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::operator[](
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 ::Array<Pair<T, U>>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Array() {
 	::Array<Pair<T, U>> arr;
@@ -154,7 +152,7 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Array() {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 ::Array<U>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DataArray() {
 	::Array<U> arr;
@@ -165,7 +163,7 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DataArray() {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 ::Array<T>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::IndexArray() {
 	::Array<T> arr;
@@ -176,9 +174,9 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::IndexArray() {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BFS(
-    FunctionType<bool(Node*)> func) {
+FunctionType<bool(Node*)> func) {
 	if (Root == nullptr)
 		return;
 	bfs_queue.Clear();
@@ -195,9 +193,9 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BFS(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DFS(
-    FunctionType<void(Node*)> func, FunctionType<bool(Node*)> canreach) {
+FunctionType<void(Node*)> func, FunctionType<bool(Node*)> canreach) {
 	if (!canreach(Root))
 		return;
 	if (Size == 0)
@@ -219,7 +217,7 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DFS(
 			func(dfs_loc[place]);
 		}
 		Node* togo =
-		    dfs_num[place] == 0 ? dfs_loc[place]->child1 : dfs_loc[place]->child2;
+		dfs_num[place] == 0 ? dfs_loc[place]->child1 : dfs_loc[place]->child2;
 		if (togo == nullptr || !canreach(togo)) {
 			++dfs_num[place];
 			continue;
@@ -231,9 +229,9 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DFS(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
-void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(T index,
-                                                                      U val) {
+typename BeforeChangeFunc, typename AfterChangeFunc>
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(
+T index, U val) {
 	++Size;
 	Node* newnode = nullptr;
 	if (AvailNodes.Size > 0) {
@@ -282,7 +280,7 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(T index,
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Leq(T index) {
 	Node* BestCurrent = nullptr;
 	ull BestCurrentNumber = 0;
@@ -319,7 +317,7 @@ bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Leq(T index) {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Geq(T index) {
 	Node* BestCurrent = nullptr;
 	ull BestCurrentNumber = 0;
@@ -356,7 +354,7 @@ bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Geq(T index) {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Find(T index) {
 	Current = Root;
 	CurrentNumber = 0;
@@ -383,7 +381,7 @@ bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Find(T index) {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Delete() {
 	if (Current == nullptr)
 		return;
@@ -428,9 +426,9 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Delete() {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BalanceRoutes(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* loc) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* loc) {
 	loc = Balance(loc);
 
 	while (FindRoutes.Size > 0) {
@@ -444,10 +442,10 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BalanceRoutes(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Balance(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
 	if (node == nullptr)
 		return nullptr;
 	if (Dist(length(node->child1), length(node->child2)) >= 2) {
@@ -477,10 +475,10 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Balance(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::LL_Rotate(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
 	if (WithExtension) {
 		before_change(node);
 		before_change(node->child1);
@@ -495,10 +493,10 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::LL_Rotate(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::LR_Rotate(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
 	if (WithExtension) {
 		before_change(node);
 		before_change(node->child1);
@@ -517,10 +515,10 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::LR_Rotate(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::RR_Rotate(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
 	if (WithExtension) {
 		before_change(node);
 		before_change(node->child2);
@@ -535,10 +533,10 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::RR_Rotate(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node*
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::RL_Rotate(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
 	if (WithExtension) {
 		before_change(node);
 		before_change(node->child2);
@@ -556,9 +554,9 @@ AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::RL_Rotate(
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> LessFunc,
-          typename BeforeChangeFunc, typename AfterChangeFunc>
+typename BeforeChangeFunc, typename AfterChangeFunc>
 void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Update(
-    AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Node* node) {
 	if (node == nullptr)
 		return;
 	node->weight = weight(node->child1) + weight(node->child2) + 1;

@@ -8,6 +8,6 @@
 #define range(i, v, arr)                                                       \
 	if (arr.Length > 0)                                                          \
 		for (size_t i = 0, RANGE_LOOP_TEMP = 0; i < arr.Length;                    \
-		     (RANGE_LOOP_TEMP = 0, ++i))                                           \
+		(RANGE_LOOP_TEMP = 0, ++i))                                                \
 			for ([[maybe_unused]] auto&& v = arr[i]; RANGE_LOOP_TEMP == 0;           \
-			     ++RANGE_LOOP_TEMP)
+			++RANGE_LOOP_TEMP)

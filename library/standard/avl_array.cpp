@@ -4,15 +4,15 @@
 #include "balanced_tree.cpp"
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 class AVLArrayClass {
 	static_assert(std::is_copy_assignable<T>::value);
 	static_assert(std::is_copy_assignable<U>::value);
 
 public:
 	AVLArrayClass(TypeVar<T>, TypeVar<U>, IndexLT& index_lt, DataLT& data_lt,
-	              IndexDataLT& index_data_lt);
+	IndexDataLT& index_data_lt);
 
 	// index updating
 	U& operator[](T ind);
@@ -54,19 +54,18 @@ public:
 };
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
-AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::AVLArrayClass(
-    TypeVar<T>, TypeVar<U>, IndexLT& index_lt, DataLT& data_lt,
-    IndexDataLT& index_data_lt)
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::AVLArrayClass(TypeVar<T>,
+TypeVar<U>, IndexLT& index_lt, DataLT& data_lt, IndexDataLT& index_data_lt)
     : index_lt(index_lt), data_lt(data_lt), index_data_lt(index_data_lt),
       index_tree(AVLTree<T, U, IndexLT>(Type<T>, Type<U>, index_lt)),
-      data_tree(AVLTree<Pair<U, T>, T, IndexDataLT>(Type<Pair<U, T>>, Type<T>,
-                                                    index_data_lt)) {}
+      data_tree(AVLTree<Pair<U, T>, T, IndexDataLT>(
+      Type<Pair<U, T>>, Type<T>, index_data_lt)) {}
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 ::Array<U> AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::DataArray() {
 	::Array<U> arr(Length);
 	::Array<Pair<T, U>> pair_arr = data_tree.IndexArray();
@@ -77,8 +76,8 @@ template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Resolve() {
 	if (queued) {
 		if (neq(originalValue, *queuePointer)) {
@@ -91,8 +90,8 @@ void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Resolve() {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 U& AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::operator[](T ind) {
 	Resolve();
 	index = ind;
@@ -109,8 +108,8 @@ U& AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::operator[](T ind) {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Delete() {
 	assert(queued);
 	queued = false;
@@ -122,8 +121,8 @@ void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Delete() {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::DeleteIfExists(T ind) {
 	if (Exists(ind)) {
 		Delete(ind);
@@ -131,23 +130,23 @@ void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::DeleteIfExists(T ind) {
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 void AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Delete(T ind) {
 	(*this)[ind];
 	Delete();
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 bool AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Exists(T ind) {
 	return index_tree.Find(ind);
 }
 
 template <typename T, typename U, FunctionConcept<bool, T, T> IndexLT,
-          FunctionConcept<bool, U, U> DataLT,
-          FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
+FunctionConcept<bool, U, U> DataLT,
+FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 U& AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Nth(ull ind) {
 	assert(ind < Length);
 	Resolve();
@@ -161,16 +160,16 @@ U& AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Nth(ull ind) {
 }
 
 template <typename T, typename U, typename IndexLT, typename DataLT>
-auto AVLArray(TypeVar<T> t_type, TypeVar<U> u_type, IndexLT&& index_lt,
-              DataLT&& data_lt) {
+auto AVLArray(
+TypeVar<T> t_type, TypeVar<U> u_type, IndexLT&& index_lt, DataLT&& data_lt) {
 	auto index_data_lt = [=](Pair<U, T> n1, Pair<U, T> n2) -> bool {
 		if (data_lt(n1.val1, n2.val1) || data_lt(n2.val1, n1.val1)) {
 			return data_lt(n1.val2, n2.val2);
 		}
 		return index_lt(n1.val2, n2.val2);
 	};
-	AVLArrayClass<T, U, IndexLT, DataLT, decltype(index_data_lt)> avlarray(
-	    t_type, u_type, std::forward<IndexLT>(index_lt),
-	    std::forward<DataLT>(data_lt), index_data_lt);
+	AVLArrayClass<T, U, IndexLT, DataLT, decltype(index_data_lt)> avlarray(t_type,
+	u_type, std::forward<IndexLT>(index_lt), std::forward<DataLT>(data_lt),
+	index_data_lt);
 	return avlarray;
 }

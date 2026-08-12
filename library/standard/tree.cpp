@@ -21,14 +21,13 @@ public:
 	};
 
 	void DFS(ull start, FunctionType<void(ull)> backfunc,
-	         FunctionType<bool(ull, ull)> cango,
-	         FunctionType<void(ull)> firstreach);
+	FunctionType<bool(ull, ull)> cango, FunctionType<void(ull)> firstreach);
 
 	template <typename func1, typename func2, typename func3>
 	void DFS(ull start, func1&& backfunc, func2&& cango, func3&& firstreach) {
 		DFS(start, FunctionType<void(ull)>(std::forward<func1>(backfunc)),
-		    FunctionType<bool(ull, ull)>(std::forward<func2>(cango)),
-		    FunctionType<void(ull)>(std::forward<func3>(firstreach)));
+		FunctionType<bool(ull, ull)>(std::forward<func2>(cango)),
+		FunctionType<void(ull)>(std::forward<func3>(firstreach)));
 	}
 
 	Array<Node, true> Nodes;
@@ -52,8 +51,7 @@ template <typename T> void Tree<T>::Connect(ull parent, ull child, T val) {
 
 template <typename T>
 void Tree<T>::DFS(ull start, FunctionType<void(ull)> backfunc,
-                  FunctionType<bool(ull, ull)> cango,
-                  FunctionType<void(ull)> firstreach) {
+FunctionType<bool(ull, ull)> cango, FunctionType<void(ull)> firstreach) {
 	Array<ull, true> loc;
 	Array<ull, true> num;
 	ull place = 0;
@@ -149,10 +147,10 @@ template <typename T> void Tree<T>::Memo() {
 			}
 			newstack.Push(stack[i]);
 			locnode.parents.Push(
-			    Nodes[locnode.parents[degree - 1]].parents[degree - 1]);
+			Nodes[locnode.parents[degree - 1]].parents[degree - 1]);
 			locnode.toparents.Push(
-			    locnode.toparents[degree - 1] +
-			    Nodes[locnode.parents[degree - 1]].toparents[degree - 1]);
+			locnode.toparents[degree - 1] +
+			Nodes[locnode.parents[degree - 1]].toparents[degree - 1]);
 		}
 		if (newstack.Length == 0)
 			break;

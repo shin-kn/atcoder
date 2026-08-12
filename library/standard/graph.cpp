@@ -31,13 +31,13 @@ public:
 
 	template <bool Forward = true>
 	void DFS(ull start, FunctionType<void(ull)> backfunc,
-	         FunctionType<bool(ull)> cango, FunctionType<void(ull)> firstreach);
+	FunctionType<bool(ull)> cango, FunctionType<void(ull)> firstreach);
 	// cango is about path, others are about node
 
 	template <bool Forward = true, typename func1, typename func2, typename func3>
 	void DFS(ull start, func1&& backfunc, func2&& cango, func3&& firstreach) {
 		DFS<Forward>(start, std::forward<func1>(backfunc),
-		             std::forward<func2>(cango), std::forward<func3>(firstreach));
+		std::forward<func2>(cango), std::forward<func3>(firstreach));
 	}
 
 	template <typename T2, typename U2> Array<ull> SCC(Graph<T2, U2>&);
@@ -78,8 +78,7 @@ void Graph<T, U>::Connect(ull from, ull to, T cap, U cost) {
 template <typename T, typename U>
 template <bool Forward>
 void Graph<T, U>::DFS(ull start, FunctionType<void(ull)> backfunc,
-                      FunctionType<bool(ull)> cango,
-                      FunctionType<void(ull)> firstreach) {
+FunctionType<bool(ull)> cango, FunctionType<void(ull)> firstreach) {
 	Array<ull, true> loc;
 	Array<ull, true> num;
 	ull place = 0;
