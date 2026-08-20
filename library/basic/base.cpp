@@ -35,6 +35,8 @@ constexpr ull NiceP = 998244353;
 
 constexpr ull SomeBigSize = 1024 * 1024 * 1;
 
+constexpr ull NMOD_COMB_CACHE_N = 1024;
+
 template <typename T> constexpr T PI = std::numbers::pi_v<T>;
 
 template <std::integral T> class InftyValue {
@@ -59,3 +61,9 @@ template <typename T> struct TypeStruct {};
 template <typename T> TypeStruct<T> Type;
 
 template <typename T> using TypeVar = TypeStruct<T>&;
+
+template <typename Arr, typename T>
+concept ArrayLike = requires(Arr arr, ull index) {
+	{ arr.Length } -> std::convertible_to<ull>;
+	{ arr[index] } -> std::same_as<T&>;
+};

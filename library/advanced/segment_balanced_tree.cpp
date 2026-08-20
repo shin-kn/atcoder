@@ -24,6 +24,7 @@ template <
 // T: index, U: value, V:action
 class LazySegmentAVLTreeClass {
 public:
+	LazySegmentAVLTreeClass() {}
 	LazySegmentAVLTreeClass(
 	  TypeVar<T>,
 	  TypeVar<U>,

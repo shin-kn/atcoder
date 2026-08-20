@@ -3,67 +3,69 @@
 
 // Inf,Sup should be
 //  exists v in [val1,val2] that func(v)=true
-
-template <typename T> T Sup(T val1, T val2, FunctionType<bool(T)> func) {
-	T ngval;
-	bool ngvalinit = false;
-	T loc;
-	while (true) {
-		if (ngvalinit) {
-			loc = (val1 + ngval) / 2;
-			if (loc == ngval || loc == val1)
-				break;
+template <std::integral Int, FunctionConcept<bool, Int> FuncType>
+Int Sup(Int lower, Int upper, FuncType&& func) {
+	++upper;
+	// func(upper)=false;
+	while (lower + Int(1) != upper) {
+		Int test = (lower + upper) / Int(2);
+		if (func(test)) {
+			lower = test;
 		} else {
-			loc = (val1 + val2) / 2;
-			if (loc == val1) {
-				if (val1 == val2)
-					break;
-				loc = val2;
-			}
-		}
-		if (func(loc)) {
-			val1 = loc;
-		} else {
-			ngvalinit = true;
-			ngval = loc;
+			upper = test;
 		}
 	}
-	return val1;
+	return lower;
 }
 
-template <typename T, typename Func> T Sup(T val1, T val2, Func&& func) {
-	return Sup(val1, val2, FunctionType<bool(T)>(std::forward<Func>(func)));
-}
-
-template <typename T> T Inf(T val1, T val2, FunctionType<bool(T)> func) {
-	T ngval;
-	bool ngvalinit = false;
-	T loc;
-	while (true) {
-		if (ngvalinit) {
-			loc = (ngval + val2) / 2;
-			if (loc == ngval || loc == val2)
-				break;
+template <std::integral Int, FunctionConcept<bool, Int> FuncType>
+Int Inf(Int lower, Int upper, FuncType&& func) {
+	--lower;
+	// func(lower)=false;
+	while (lower + Int(1) != upper) {
+		Int test = (lower + upper) / Int(2);
+		if (func(test)) {
+			upper = test;
 		} else {
-			loc = (val1 + val2) / 2;
-			if (loc == val2) {
-				if (val1 == val2)
-					break;
-				loc = val1;
-			}
-		}
-		if (func(loc)) {
-			val2 = loc;
-		} else {
-			ngvalinit = true;
-			ngval = loc;
+			lower = test;
 		}
 	}
-	return val2;
+	return upper;
 }
 
-template <typename T, typename Func> T Inf(T val1, T val2, Func&& func) {
-	return Inf(val1, val2, FunctionType<bool(T)>(std::forward<Func>(func)));
+// assume arraylike is sorted
+// assume arr[0]<=val
+template <typename T, ArrayLike<T> Arr> ull Leq(Arr& arr, T val) {
+	ull lower = 0;
+	ull upper = arr.Length;
+	// func(upper)=false;
+	while (lower + ull(1) != upper) {
+		ull test = (lower + upper) / ull(2);
+		if (arr[test] <= val) {
+			lower = test;
+		} else {
+			upper = test;
+		}
+	}
+	return lower;
+}
+// assume arraylike is sorted
+// assume arr[arr.Length-1]>=val
+template <typename T, ArrayLike<T> Arr> ull Geq(Arr& arr, T val) {
+	if (arr[0] >= val)
+		return 0;
+	ull lower = 0;
+	ull upper = arr.Length - 1;
+	// func(lower)=false;
+	while (lower + ull(1) != upper) {
+		ull test = (lower + upper) / ull(2);
+		if (arr[test] >= val) {
+			upper = test;
+		} else {
+			lower = test;
+		}
+	}
+	return upper;
 }
 
 template <typename T> void Sort(Array<T>& arr, bool Smaller = true) {

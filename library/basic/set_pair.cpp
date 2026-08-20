@@ -75,13 +75,21 @@ template <typename T1, typename T2> class Pair {
 
 public:
 	Pair(T1 val1, T2 val2) : val1(val1), val2(val2) {}
-	Pair() {}
+	Pair() : val1(T1()), val2(T2()) {}
 
 	T1 val1;
 	T2 val2;
 
 	bool operator<(Pair other)
 	  requires SmallerDefined<T1> && SmallerDefined<T2>;
+	Pair operator+(Pair other)
+	  requires requires(Pair a, Pair b) {
+		  a.val1 + b.val1;
+		  a.val2 + b.val2;
+	  }
+	{
+		return Pair(val1 + other.val1, val2 + other.val2);
+	}
 };
 
 template <typename T1, typename T2>

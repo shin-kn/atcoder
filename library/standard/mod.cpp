@@ -374,3 +374,52 @@ fouriertransform_time(Array<Mod<P>>& arr, size_t degree, Mod<P> zeta) {
 }
 
 using NMod = Mod<NiceP>;
+
+template <typename T> inline T Factorial(ull n) {
+	T counter(1);
+	for (ull i = 1; i <= n; ++i) {
+		counter *= T(i);
+	}
+	return counter;
+}
+template <> inline NMod Factorial<NMod>(ull n) {
+	static Array<NMod> arr;
+	if (arr.Length <= n) {
+		for (ull i = arr.Length; i <= n; ++i) {
+			if (i == 0)
+				arr[i].Set(1);
+			else {
+				arr[i] = arr[i - 1] * NMod(i);
+			}
+		}
+	}
+	return arr[n];
+}
+
+template <typename T> inline T Comb(ull n, ull m) {
+	assert(n > 0 && m >= 0);
+	T counter(1);
+	for (T i = 1; i <= m; ++i) {
+		counter *= T(n - i + 1);
+		counter /= T(i);
+	}
+	return counter;
+}
+
+template <> inline NMod Comb<NMod>(ull n, ull m) {
+	static NMod cache[NMOD_COMB_CACHE_N]
+	                 [NMOD_COMB_CACHE_N + 1]; // some space for improvement
+	static bool cache_init[NMOD_COMB_CACHE_N][NMOD_COMB_CACHE_N + 1] = {
+	  false
+	}; // some space for improvement
+	if (n <= NMOD_COMB_CACHE_N) {
+		if (cache_init[n][m]) {
+			return cache[n][m];
+		}
+		cache_init[n][m] = true;
+		cache[n][m] =
+		  Factorial<NMod>(n) / Factorial<NMod>(m) / Factorial<NMod>(n - m);
+		return cache[n][m];
+	}
+	return Factorial<NMod>(n) / Factorial<NMod>(m) / Factorial<NMod>(n - m);
+}

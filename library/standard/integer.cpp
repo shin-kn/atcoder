@@ -7,16 +7,6 @@ template <std::integral T> inline T Sqrt(T num) { // assume num>=0
 	return Sup(T(0), num, [=](T n) -> bool { return n * n <= num; });
 }
 
-template <typename T> inline T Combination(T n, T c) {
-	if (c >= n / 2 + 1)
-		return Combination(n, n - c);
-	T counter = 1;
-	for (size_t i = 1; i <= c; ++i) {
-		counter = counter * (n - i + 1) / i;
-	}
-	return counter;
-}
-
 template <typename T> inline Set<T, 2> AxBy(T a, T b) { // a!=0,b!=0
 	if (a == 0 || b == 0)
 		return Set<T, 2>(0, 0);

@@ -60,9 +60,9 @@ public:
 
 	Pair<T, U&> operator[](ull ind); // equally, Nth
 
-	::Array<T> IndexArray();
-	::Array<U> DataArray();
-	::Array<Pair<T, U>> Array();
+	::LightArray<T> IndexArray();
+	::LightArray<U> DataArray();
+	::LightArray<Pair<T, U>> Array();
 
 	// internal things
 
@@ -155,12 +155,14 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-::Array<Pair<T, U>>
+::LightArray<Pair<T, U>>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Array() {
-	::Array<Pair<T, U>> arr;
+	::LightArray<Pair<T, U>> arr;
 	arr.Allocate(Size);
+	ull arr_size = 0;
 	auto append = [&](Node* node) {
-		arr[arr.Length] = Pair<T, U>(node->index, node->val);
+		arr[arr_size] = Pair<T, U>(node->index, node->val);
+		++arr_size;
 	};
 	DFS(append);
 	return arr;
@@ -172,11 +174,15 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-::Array<U>
+::LightArray<U>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DataArray() {
-	::Array<U> arr;
+	::LightArray<U> arr;
 	arr.Allocate(Size);
-	auto append = [&](Node* node) { arr[arr.Length] = node->val; };
+	ull arr_size = 0;
+	auto append = [&](Node* node) {
+		arr[arr_size] = node->val;
+		++arr_size;
+	};
 	DFS(append);
 	return arr;
 }
@@ -187,11 +193,15 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-::Array<T>
+::LightArray<T>
 AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::IndexArray() {
-	::Array<T> arr;
+	::LightArray<T> arr;
 	arr.Allocate(Size);
-	auto append = [&](Node* node) { arr[arr.Length] = node->index; };
+	ull arr_size = 0;
+	auto append = [&](Node* node) {
+		arr[arr_size] = node->index;
+		++arr_size;
+	};
 	DFS(append);
 	return arr;
 }

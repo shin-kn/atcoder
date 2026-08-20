@@ -56,16 +56,60 @@ template <typename T> inline void Swap(T& val1, T& val2) {
 	val2 = temp;
 }
 
-template <typename T> inline T Factorial(ull n) {
-	static Array<T> arr;
-	if (arr.Length <= n) {
-		for (ull i = arr.Length; i <= n; ++i) {
-			if (i == 0)
-				arr[i] = T(ull(1));
-			else {
-				arr[i] = arr[i - 1] * i;
-			}
+constexpr ull GetDefaultDigit(ull N) {
+	ull i = 1;
+	for (; i < 64; ++i) {
+		if (Power(N, i - 1) > Infty<ull> / N) {
+			break;
 		}
 	}
-	return arr[n];
+	return i;
 }
+
+template <ull N = 10, ull DigitNum = GetDefaultDigit(N)> class Digits {
+public:
+	static constexpr ull Length = DigitNum;
+	ull digits[DigitNum];
+	Digits(ull n) {
+		ull power = 1;
+		for (ull i = 0; i < DigitNum; ++i) {
+			digits[i] = (n / power) % N;
+			power *= N;
+		}
+	}
+
+	inline ull Value() {
+		ull counter = 0;
+		ull power = 1;
+		for (ull i = 0; i < DigitNum; ++i) {
+			counter += power * digits[i];
+			power *= N;
+		}
+		return counter;
+	}
+	inline ull& operator[](ull ind) { return digits[ind]; }
+};
+
+template <ull DigitNum> class Digits<2, DigitNum> {
+public:
+	static constexpr ull Length = DigitNum;
+	ull digits[DigitNum];
+	Digits(ull n) {
+		ull power = 1;
+		for (ull i = 0; i < DigitNum; ++i) {
+			digits[i] = n & power;
+			power <<= 1;
+		}
+	}
+
+	inline ull Value() {
+		ull counter = 0;
+		ull power = 1;
+		for (ull i = 0; i < DigitNum; ++i) {
+			counter |= power & digits[i];
+			power <<= 1;
+		}
+		return counter;
+	}
+	inline ull& operator[](ull ind) { return digits[ind]; }
+};
