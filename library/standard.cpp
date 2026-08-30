@@ -4,7 +4,6 @@
 #include "macro.cpp"
 #include "print.cpp"
 #include "standard/avl_array.cpp"
-#include "standard/balanced_tree.cpp"
 #include "standard/graph.cpp"
 #include "standard/integer.cpp"
 #include "standard/mod.cpp"

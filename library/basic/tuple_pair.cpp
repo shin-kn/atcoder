@@ -1,31 +1,20 @@
 #pragma once
 #include "base.cpp"
+template <typename T, typename... Args> using FirstArgType = T;
 
-template <typename T, size_t N> class Set {
+template <typename T, size_t N> class Tuple {
 	T Val[N];
 
 public:
-	size_t Length = N;
+	ull Length = N;
 
-	Set() {}
-	Set(Set& other) {
-		for (size_t i = 0; i < N; ++i)
-			Val[i] = other.Val[i];
-	}
-	Set(Set&& other) {
-		for (size_t i = 0; i < N; ++i)
-			Val[i] = other.Val[i];
-	}
+	Tuple() {}
 
-	template <typename... Args> void set(T head, Args... args) {
-		Val[N - sizeof...(args) - 1] = head;
-		set(args...);
-	}
-	void set() {}
+	template <typename... Args>
+	  requires(sizeof...(Args) == N)
+	Tuple(Args... args) : Val(args...) {}
 
-	template <typename... Args> Set(Args... args) { set(args...); }
-
-	Set& operator=(const Set& src) {
+	Tuple& operator=(const Tuple& src) {
 		for (size_t i = 0; i < N; ++i) {
 			Val[i] = src.Val[i];
 		}
@@ -33,41 +22,56 @@ public:
 	}
 
 	T& operator[](size_t idx) { return Val[idx]; }
-	bool operator<(Set<T, N> set) {
+	bool operator<(Tuple<T, N> other) {
 		for (size_t i = 0; i < N; ++i) {
-			if (this->Val[i] < set.Val[i]) {
+			if (this->Val[i] < other.Val[i]) {
 				return true;
 			}
-			if (this->Val[i] > set.Val[i]) {
+			if (this->Val[i] > other.Val[i]) {
 				return false;
 			}
 		}
 		return false;
 	}
-	bool operator>(Set<T, N> set) {
+	bool operator>(Tuple<T, N> other) {
 		for (size_t i = 0; i < N; ++i) {
-			if (this->Val[i] > set.Val[i]) {
+			if (this->Val[i] > other.Val[i]) {
 				return true;
 			}
-			if (this->Val[i] < set.Val[i]) {
+			if (this->Val[i] < other.Val[i]) {
 				return false;
 			}
 		}
 		return false;
 	}
 
-	bool operator<=(Set<T, N> set) { return !(this->operator>(set)); }
-	bool operator>=(Set<T, N> set) { return !(this->operator<(set)); }
+	bool operator<=(Tuple<T, N> other) { return !(this->operator>(other)); }
+	bool operator>=(Tuple<T, N> other) { return !(this->operator<(other)); }
 
-	bool operator==(Set<T, N>& set) {
+	bool operator==(Tuple<T, N>& other) {
 		for (size_t i = 0; i < N; ++i) {
-			if (this->Val[i] != set.Val[i]) {
+			if (this->Val[i] != other.Val[i]) {
 				return false;
 			}
 		}
 		return true;
 	}
 };
+
+template <typename T, typename... Args>
+Tuple(T, Args...) -> Tuple<T, sizeof...(Args) + 1>;
+
+template <typename T, ull N>
+std::ostream& operator<<(std::ostream& os, Tuple<T, N>& tuple) {
+	os << "(";
+	for (ull i = 0; i < N; ++i) {
+		if (i != 0)
+			cout << ", ";
+		cout << tuple[i];
+	}
+	cout << ")";
+	return os;
+}
 
 template <typename T1, typename T2> class Pair {
 	static_assert(std::is_copy_assignable<T1>::value);

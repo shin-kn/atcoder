@@ -1,19 +1,19 @@
 # atcoder
-library for atcoder   
+library for atcoder
 some codes are transplanted from shin-kn/atcoder_old
 
-## to use 
+## to use
 write some codes in solve.cpp and compile the main.cpp
 
 ## batch files
 If you use Windows, you can use batch files in the root directory
-- comp.cmd  
+- comp.cmd
 For compile
-- run.cmd  
-For compile and run.  
+- run.cmd
+For compile and run.
 As a input, it uses text.txt
-- test.cmd  
+- test.cmd
 copy the clipboard into text.txt
-- submit.cmd  
-Using include.py, it write main.cpp into one file, including included files  
+- submit.cmd
+Using include.py, it write main.cpp into one file, including included files
 and yank into the clipboard

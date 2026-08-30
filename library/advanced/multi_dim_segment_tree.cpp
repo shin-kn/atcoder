@@ -10,7 +10,7 @@ public:
 	}
 
 	template <FunctionConcept<T, T, T> AddFunc>
-	void Init(::Set<ull, N>, T, AddFunc&&);
+	void Init(Tuple<ull, N>, T, AddFunc&&);
 
 	FunctionType<T(T, T)> add;
 
@@ -20,13 +20,13 @@ public:
 
 	LightArray<MultiDimSegmentTree<T, N - 1>> Val;
 
-	T Eval(::Set<ull, N>, ::Set<ull, N>);
+	T Eval(Tuple<ull, N>, Tuple<ull, N>);
 	Stack<ull> eval_stack;
-	void Set(::Set<ull, N> loc, T val) {
+	void Set(Tuple<ull, N> loc, T val) {
 		set(loc, val);
 		del_dif();
 	}
-	void set(::Set<ull, N>, T);
+	void set(Tuple<ull, N>, T);
 	void del_dif();
 
 	void update_dif(MultiDimSegmentTree&, MultiDimSegmentTree&);
@@ -40,7 +40,7 @@ public:
 template <typename T, ull N>
 template <FunctionConcept<T, T, T> AddFunc>
 void MultiDimSegmentTree<T, N>::Init(
-  ::Set<ull, N> size, T init_val, AddFunc&& func
+  Tuple<ull, N> size, T init_val, AddFunc&& func
 ) {
 	add = FunctionType<T(T, T)>(std::forward<AddFunc>(func));
 
@@ -50,7 +50,7 @@ void MultiDimSegmentTree<T, N>::Init(
 	dif_array.Allocate(Degree);
 
 	Val.Allocate(CellLength);
-	::Set<ull, N - 1> next_size;
+	Tuple<ull, N - 1> next_size;
 
 	for (ull i = 0; i < N - 1; ++i)
 		next_size[i] = size[i + 1];
@@ -94,9 +94,9 @@ void MultiDimSegmentTree<T, N>::update_dif(
 }
 
 template <typename T, ull N>
-void MultiDimSegmentTree<T, N>::set(::Set<ull, N> loc, T val) {
+void MultiDimSegmentTree<T, N>::set(Tuple<ull, N> loc, T val) {
 	ull cell_loc = Length - 1 + loc[0];
-	::Set<ull, N - 1> new_loc;
+	Tuple<ull, N - 1> new_loc;
 	for (ull i = 0; i < N - 1; ++i)
 		new_loc[i] = loc[i + 1];
 	Val[cell_loc].set(new_loc, val);
@@ -123,10 +123,10 @@ ull MultiDimSegmentTree<T, N>::CellIndex(size_t start, size_t logsize) {
 
 template <typename T, ull N>
 T MultiDimSegmentTree<T, N>::Eval(
-  ::Set<ull, N> start_set, ::Set<ull, N> end_set
+  Tuple<ull, N> start_tuple, Tuple<ull, N> end_tuple
 ) {
-	ull start = start_set[0];
-	ull end = end_set[0];
+	ull start = start_tuple[0];
+	ull end = end_tuple[0];
 
 	ull loc = start;
 	for (size_t i = 0; true; ++i) {
@@ -148,11 +148,11 @@ T MultiDimSegmentTree<T, N>::Eval(
 		}
 	}
 
-	::Set<ull, N - 1> new_start_set;
-	::Set<ull, N - 1> new_end_set;
+	Tuple<ull, N - 1> new_start_set;
+	Tuple<ull, N - 1> new_end_set;
 	for (ull i = 0; i < N - 1; ++i) {
-		new_start_set[i] = start_set[i + 1];
-		new_end_set[i] = end_set[i + 1];
+		new_start_set[i] = start_tuple[i + 1];
+		new_end_set[i] = end_tuple[i + 1];
 	}
 
 	T counter;
@@ -173,7 +173,7 @@ public:
 	}
 
 	template <FunctionConcept<T, T, T> AddFunc>
-	void Init(::Set<ull, 0>, T init_val, AddFunc&& func) {
+	void Init(Tuple<ull, 0>, T init_val, AddFunc&& func) {
 		add = FunctionType<T(T, T)>(std::forward<AddFunc>(func));
 		val = init_val;
 	}
@@ -181,9 +181,9 @@ public:
 	FunctionType<T(T, T)> add;
 
 	T val;
-	T Eval(::Set<ull, 0>, ::Set<ull, 0>) { return val; }
+	T Eval(Tuple<ull, 0>, Tuple<ull, 0>) { return val; }
 
-	void set(::Set<ull, 0>, T set_val) { val = set_val; }
+	void set(Tuple<ull, 0>, T set_val) { val = set_val; }
 	void del_dif() {}
 
 	void update_dif(MultiDimSegmentTree& val1, MultiDimSegmentTree& val2) {

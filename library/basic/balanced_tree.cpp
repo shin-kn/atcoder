@@ -39,7 +39,7 @@ public:
 
 	ull Size = 0;
 
-	void Push(T, U);
+	template <typename ULike> void Push(T, ULike&&);
 
 	bool Find(T);
 	bool Leq(T);
@@ -277,8 +277,9 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
+template <typename ULike>
 void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(
-  T index, U val
+  T index, ULike&& val
 ) {
 	++Size;
 	Node* newnode = nullptr;
@@ -289,7 +290,7 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(
 	}
 	newnode->Clear();
 	newnode->index = index;
-	newnode->val = val;
+	newnode->val = std::forward<ULike>(val);
 
 	if (WithExtension) {
 		after_change(newnode);

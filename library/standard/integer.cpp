@@ -7,25 +7,25 @@ template <std::integral T> inline T Sqrt(T num) { // assume num>=0
 	return Sup(T(0), num, [=](T n) -> bool { return n * n <= num; });
 }
 
-template <typename T> inline Set<T, 2> AxBy(T a, T b) { // a!=0,b!=0
+template <typename T> inline Tuple<T, 2> AxBy(T a, T b) { // a!=0,b!=0
 	if (a == 0 || b == 0)
-		return Set<T, 2>(0, 0);
+		return Tuple<T, 2>(0, 0);
 	if (Abs(a) < Abs(b)) {
 		T rem = b % a;
 		if (rem == 0) {
-			return Set<T, 2>(Abs(a) / a, 0);
+			return Tuple<T, 2>(Abs(a) / a, 0);
 		}
-		Set<T, 2> set = AxBy(a, rem);
-		set[0] = set[0] - set[1] * ((b - rem) / a);
-		return set;
+		Tuple<T, 2> tuple = AxBy(a, rem);
+		tuple[0] = tuple[0] - tuple[1] * ((b - rem) / a);
+		return tuple;
 	}
 	T rem = a % b;
 	if (rem == 0) {
-		return Set<T, 2>(0, Abs(b) / b);
+		return Tuple<T, 2>(0, Abs(b) / b);
 	}
-	Set<T, 2> set = AxBy(rem, b);
-	set[1] = set[1] - set[0] * ((a - rem) / b);
-	return set;
+	Tuple<T, 2> tuple = AxBy(rem, b);
+	tuple[1] = tuple[1] - tuple[0] * ((a - rem) / b);
+	return tuple;
 }
 
 template <typename T> inline T GCD(T a, T b) {
@@ -78,8 +78,8 @@ public:
 	Factorizer() {}
 	Factorizer(size_t n) { Init(n); }
 
-	Array<Set<size_t, 2>> operator()(size_t num) {
-		Array<Set<size_t, 2>> arr;
+	Array<Tuple<size_t, 2>> operator()(size_t num) {
+		Array<Tuple<size_t, 2>> arr;
 		if (num == 0)
 			return arr;
 		for (size_t i = 0; num != 1; ++i) {
@@ -90,7 +90,7 @@ public:
 				++counter;
 			}
 			if (counter != 0)
-				arr.Push(Set<size_t, 2>(j, counter));
+				arr.Push(Tuple<size_t, 2>(j, counter));
 		}
 		return arr;
 	}
