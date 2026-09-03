@@ -1,6 +1,7 @@
 #pragma once
 #include "balanced_tree.cpp"
 #include "base.cpp"
+#include "light_array.cpp"
 
 template <typename T, typename U>
   requires requires(T x, T y) {
@@ -13,9 +14,21 @@ class Dict {
 
 public:
 	ull Size = 0;
+	bool search_succeeded = false;
+	T prev_search;
 	Dict() {};
-	bool Has(T ind) { return avltree.Find(ind); }
+	bool Has(T ind) {
+		if (search_succeeded && ind == prev_search)
+			return true;
+		search_succeeded = avltree.Find(ind);
+		prev_search = ind;
+		return search_succeeded;
+	}
 	U& operator[](T ind) {
+		if (search_succeeded && ind == prev_search)
+			return avltree.Data();
+		search_succeeded = true;
+		prev_search = ind;
 		if (avltree.Find(ind)) {
 			return avltree.Data();
 		}
@@ -25,5 +38,5 @@ public:
 		return avltree.Data();
 	}
 
-	Array<T> Keys() { return avltree.IndexArray(); }
+	LightArray<T> Keys() { return avltree.IndexArray(); }
 };

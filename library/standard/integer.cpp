@@ -7,7 +7,7 @@ template <std::integral T> inline T Sqrt(T num) { // assume num>=0
 	return Sup(T(0), num, [=](T n) -> bool { return n * n <= num; });
 }
 
-template <typename T> inline Tuple<T, 2> AxBy(T a, T b) { // a!=0,b!=0
+template <typename T> constexpr inline Tuple<T, 2> AxBy(T a, T b) { // a!=0,b!=0
 	if (a == 0 || b == 0)
 		return Tuple<T, 2>(0, 0);
 	if (Abs(a) < Abs(b)) {

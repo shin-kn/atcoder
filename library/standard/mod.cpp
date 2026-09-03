@@ -176,6 +176,113 @@ template <size_t P> std::ostream& operator<<(std::ostream& os, Mod<P> val) {
 	return os;
 }
 
+template <ull P, ArrayLike<Mod<P>> ArrayType>
+inline LightArray<Mod<P>> fourier_transform_forward(
+  ArrayType& arr, ull length, Mod<P> zeta, ull arr_len
+) {
+	assert(length >= 1 && (ull)1 << Log2(length) == length);
+	ull total_deg = Log2(length) + 1;
+	Mod<P>* cache = new Mod<P>[length]();
+	Mod<P>* zeta_cache = new Mod<P>[length / 2];
+	zeta_cache[0] = Mod<P>(1);
+	for (ull i = 1; i < length / 2; ++i)
+		zeta_cache[i] = zeta_cache[i - 1] * zeta;
+
+	auto dfs = [&](auto& self, ull deg, ull start) -> void {
+		Mod<P>* this_cache = cache + start;
+		if (deg == total_deg - 1) {
+			if (start < arr_len) {
+				*this_cache = arr[start];
+			}
+			return;
+		}
+
+		ull half_len = 1ull << (total_deg - 1 - deg - 1);
+		self(self, deg + 1, start);
+		self(self, deg + 1, start + half_len);
+
+		Mod<P>* this_zeta_cache = zeta_cache;
+		for (ull i = 0; i < half_len; ++i) {
+			Mod<P> even = this_cache[i];
+			Mod<P> odd = (*this_zeta_cache) * this_cache[half_len + i];
+			this_cache[i] = even + odd;
+			this_cache[half_len + i] = even - odd;
+			this_zeta_cache += (ull)1 << deg;
+		}
+	};
+
+	dfs(dfs, 0, 0);
+
+	delete[] zeta_cache;
+	return LightArray(cache, length);
+}
+
+template <ull P, ArrayLike<Mod<P>> ArrayType>
+void fourier_transform_inverse(
+  ArrayType& arr_1,
+  ArrayType& arr_2,
+  LightArray<Mod<P>>& res_1,
+  LightArray<Mod<P>>& res_2,
+  ull length,
+  Mod<P> zeta,
+  ull arr_len_1,
+  ull arr_len_2
+) {
+	assert(length >= 1 && (ull)1 << Log2(length) == length);
+	ull total_deg = Log2(length) + 1;
+	Mod<P>* cache_1 = new Mod<P>[length]();
+	Mod<P>* cache_2 = new Mod<P>[length]();
+	for (ull i = 0; i < arr_len_1; ++i) {
+		cache_1[i] = arr_1[i];
+	}
+
+	for (ull i = 0; i < arr_len_2; ++i) {
+		cache_2[i] = arr_2[i];
+	}
+	Mod<P>* invs_cache = new Mod<P>[length / 2];
+	invs_cache[0] = Mod<P>(1);
+	Mod<P> inv_zeta = Mod<P>(1) / zeta;
+	for (ull i = 1; i < length / 2; ++i) {
+		invs_cache[i] = invs_cache[i - 1] * inv_zeta;
+	}
+
+	auto dfs = [&](auto& self, ull deg, ull start) -> void {
+		if (deg == total_deg - 1) {
+			return;
+		}
+
+		ull half_len = 1ull << (total_deg - 1 - deg - 1);
+
+		Mod<P>* this_cache_1 = cache_1 + start;
+		Mod<P>* this_cache_2 = cache_2 + start;
+
+		Mod<P>* this_invs_cache = invs_cache;
+		for (ull i = 0; i < half_len; ++i) {
+			Mod<P> even_1 = this_cache_1[i];
+			Mod<P> odd_1 = this_cache_1[half_len + i];
+			this_cache_1[i] = (even_1 + odd_1);
+			this_cache_1[half_len + i] = (even_1 - odd_1) * (*this_invs_cache);
+
+			Mod<P> even_2 = this_cache_2[i];
+			Mod<P> odd_2 = this_cache_2[half_len + i];
+			this_cache_2[i] = (even_2 + odd_2);
+			this_cache_2[half_len + i] = (even_2 - odd_2) * (*this_invs_cache);
+
+			this_invs_cache += (ull)1 << deg;
+		}
+
+		// inv_zeta at depth deg+1 is inv_zeta^2, matching zeta^2
+		self(self, deg + 1, start);
+		self(self, deg + 1, start + half_len);
+	};
+	dfs(dfs, 0, 0);
+
+	res_1 = LightArray(cache_1, length);
+	res_2 = LightArray(cache_2, length);
+
+	delete[] invs_cache;
+}
+
 template <size_t P>
 inline LightArray<Mod<P>>
 fouriertransform_freq(Array<Mod<P>>& arr, size_t degree, Mod<P> zeta) {
@@ -383,11 +490,11 @@ template <typename T> inline T Factorial(ull n) {
 	return counter;
 }
 template <> inline NMod Factorial<NMod>(ull n) {
-	static Array<NMod> arr;
+	static Array<NMod> arr(NMOD_COMB_CACHE_N);
 	if (arr.Length <= n) {
 		for (ull i = arr.Length; i <= n; ++i) {
 			if (i == 0)
-				arr[i].Set(1);
+				arr[i] = 1;
 			else {
 				arr[i] = arr[i - 1] * NMod(i);
 			}
@@ -398,28 +505,31 @@ template <> inline NMod Factorial<NMod>(ull n) {
 
 template <typename T> inline T Comb(ull n, ull m) {
 	assert(n > 0 && m >= 0);
+	static Dict<Tuple<ull, 2>, T> dict;
+	if (dict.Has(Tuple(n, m)))
+		return dict[Tuple(n, m)];
+
 	T counter(1);
 	for (T i = 1; i <= m; ++i) {
 		counter *= T(n - i + 1);
 		counter /= T(i);
 	}
+	dict[Tuple(n, m)] = counter;
 	return counter;
 }
 
 template <> inline NMod Comb<NMod>(ull n, ull m) {
-	static NMod cache[NMOD_COMB_CACHE_N]
-	                 [NMOD_COMB_CACHE_N + 1]; // some space for improvement
-	static bool cache_init[NMOD_COMB_CACHE_N][NMOD_COMB_CACHE_N + 1] = {
-	  false
-	}; // some space for improvement
+
+	static Dict<Tuple<ull, 2>, NMod> dict;
 	if (n <= NMOD_COMB_CACHE_N) {
-		if (cache_init[n][m]) {
-			return cache[n][m];
-		}
-		cache_init[n][m] = true;
-		cache[n][m] =
-		  Factorial<NMod>(n) / Factorial<NMod>(m) / Factorial<NMod>(n - m);
-		return cache[n][m];
+
+		if (dict.Has(Tuple(n, m)))
+			return dict[Tuple(n, m)];
+		NMod res = Factorial<NMod>(n) / Factorial<NMod>(m) / Factorial<NMod>(n - m);
+		dict[Tuple(n, m)] = res;
+		return res;
 	}
-	return Factorial<NMod>(n) / Factorial<NMod>(m) / Factorial<NMod>(n - m);
+
+	NMod res = Factorial<NMod>(n) / Factorial<NMod>(m) / Factorial<NMod>(n - m);
+	return res;
 }

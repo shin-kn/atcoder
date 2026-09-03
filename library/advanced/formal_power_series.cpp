@@ -7,132 +7,111 @@ template <typename T> class FormalPowerSeries;
 
 template <size_t P> class FormalPowerSeries<Mod<P>> {
 public:
-	Array<Mod<P>> arr;
-	size_t Degree;
-	FormalPowerSeries() : Degree(0) {};
-	FormalPowerSeries(size_t N) : Degree(N) { arr.Allocate(N + 1); };
+	LightArray<Mod<P>> arr;
+	FormalPowerSeries(ull N) { SetDegree(N); }
+	ull Degree;
 
 	void Init() { arr.Set(0, Degree + 1, Mod<P>().Set(0)); }
 	void Init(Mod<P> val) { arr.Set(0, Degree + 1, val); }
 
 	void SetDegree(size_t deg) {
-		for (size_t i = Degree + 1; i <= deg; ++i) {
-			arr[i].Set(0);
-		}
+		arr.Allocate(deg + 1);
 		Degree = deg;
+		for (ull i = 0; i <= deg; ++i) {
+			arr[i] = 0;
+		}
 	}
 
 	FormalPowerSeries
 	operator*(FormalPowerSeries& other) { // convolution of Degree(deg)
-		size_t deg = Max(Degree, other.Degree);
-		size_t length = BiggerPower2(deg * 2 + 1);
-
-		if (P == 998244353 && length <= (size_t)1 << 23) {
-			length = Max(length, (size_t)4); // degree>=2
-			arr.Set(Degree + 1, length, Mod<P>().Set(0));
-			other.arr.Set(other.Degree + 1, length, Mod<P>().Set(0));
-			// NTT
-			size_t loglength = Log2(length);
-			Mod<P> zeta =
-			  Power(Mod<P>().Set((size_t)15311432), ((size_t)1 << (23 - loglength)));
-
-			LightArray<Mod<P>> arr1 =
-			  fouriertransform_freq(arr, loglength, Mod<P>().Set(1) / zeta);
-
-			LightArray<Mod<P>> arr2 =
-			  fouriertransform_freq(other.arr, loglength, Mod<P>().Set(1) / zeta);
-
-			Array<Mod<P>> arr3(length);
-			Mod<P> div = Mod<P>().Set(length).Inv();
-			for (size_t i = 0; i < length; ++i) {
-				arr3[i] = arr1[i] * arr2[i] * div;
-			}
-
-			FormalPowerSeries res;
-			res.Degree = deg;
-			res.arr = Array<Mod<P>>(fouriertransform_time(arr3, loglength, zeta));
-			return res;
-		}
-
-		// Karatsuba
-		// not implemented
-		return FormalPowerSeries();
+		return Prod(*this, other, Degree + other.Degree);
 	}
 
 	inline Mod<P>& operator[](size_t index) { return arr[index]; }
 
-	FormalPowerSeries(FormalPowerSeries& src) = delete;
-	FormalPowerSeries& operator=(FormalPowerSeries& src) = delete;
-
 	FormalPowerSeries Copy() {
 		FormalPowerSeries res(Degree);
 		for (size_t i = 0; i <= Degree; ++i)
-			res[i] = arr[i];
+			res.arr[i] = arr[i];
 		return res;
-	}
-
-	FormalPowerSeries(FormalPowerSeries&& src) {
-		arr = std::move(src.arr);
-		Degree = src.Degree;
-	}
-
-	// move assignment operator
-	FormalPowerSeries& operator=(FormalPowerSeries&& src) {
-		arr = std::move(src.arr);
-		Degree = src.Degree;
-		return *this;
 	}
 };
 
 template <size_t P> using FPS = FormalPowerSeries<Mod<P>>;
 
+template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
+
+	size_t deg = Min(f1.Degree + f2.Degree, max_deg);
+	size_t length = BiggerPower2(deg * 2 + 1);
+	size_t loglength = Log2(length);
+
+	if (P == 998244353 && length <= (size_t)1 << 23) {
+		// length = Max(length, (size_t)4); // degree>=2
+		//  NTT
+
+		Mod<P> zeta =
+		  Power(Mod<P>().Set((size_t)15311432), ((size_t)1 << (23 - loglength)));
+
+		LightArray<Mod<P>> arr_1, arr_2;
+		fourier_transform_inverse(
+		  f1.arr, f2.arr, arr_1, arr_2, length, zeta, Min(f1.Degree + 1, deg + 1),
+		  Min(f2.Degree + 1, deg + 1)
+		);
+
+		LightArray<Mod<P>> arr_3(length);
+		Mod<P> coef = Mod<P>(1) / Mod<P>(length);
+		for (size_t i = 0; i < length; ++i) {
+			arr_3[i] = arr_1[i] * arr_2[i] * coef;
+		}
+
+		FPS<P> res(deg);
+		LightArray<Mod<P>> res_raw =
+		  fourier_transform_forward(arr_3, length, zeta, length);
+		for (ull i = 0; i <= deg; ++i)
+			res.arr[i] = res_raw[i];
+		return res;
+	}
+	return FPS<P>(0);
+}
+
 template <size_t P>
 Mod<P> BostanMori(FPS<P>& p, FPS<P>& q, size_t N) { //[x^N] P(x)/Q(x),
-	assert(q[0] != Mod<P>().Set(0));
-	size_t degree = Min(N, Max(p.Degree, q.Degree) * 2);
+	assert(q[0] != Mod<P>(0));
+	FPS<P> upper = p.Copy();
+	FPS<P> lower = q.Copy();
 
-	FPS<P> upper(degree);
-	upper.Init();
-	FPS<P> lower(degree);
-	lower.Init();
-	for (size_t i = 0; i <= N && i <= p.Degree && i <= degree; ++i)
-		upper[i] = p[i];
-	for (size_t i = 0; i <= N && i <= q.Degree && i <= degree; ++i)
-		lower[i] = q[i];
 	while (N != 0) {
-		FPS<P> rev = lower.Copy();
-		for (size_t i = 0; i <= degree; ++i) {
-			if (i & 0x1) {
-				rev[i] = Mod<P>().Set(0) - rev[i];
+		FPS<P> lower_rev(lower.Degree);
+		for (ull i = 0; i <= lower.Degree; ++i) {
+			lower_rev.arr[i] = lower.arr[i];
+			if (i & 0b1)
+				lower_rev.arr[i] *= Mod<P>(P - 1);
+		}
+		upper = Prod(upper, lower_rev, N);
+		lower = Prod(lower, lower_rev, N);
+
+		FPS<P> new_lower(lower.Degree >> 1);
+		for (ull i = 0; i <= new_lower.Degree; ++i) {
+			new_lower.arr[i] = lower.arr[i << 1];
+		}
+
+		ull new_upper_degree = 0;
+		if (upper.Degree > 0) {
+			if (N & 0b1) {
+				new_upper_degree = (upper.Degree - 1) / 2;
+			} else {
+				new_upper_degree = upper.Degree / 2;
 			}
 		}
-		upper = upper * rev;
-		lower = lower * rev;
-		size_t i;
-		for (i = 0; 2 * i <= degree; ++i) {
-			lower[i] = lower[2 * i];
+		FPS<P> new_upper(new_upper_degree);
+		for (ull i = 0; i <= new_upper.Degree; ++i) {
+			new_upper.arr[i] = upper.arr[(i << 1) + (N & 0b1)];
 		}
-		size_t newlowerdeg = i - 1;
-		size_t newupperdeg = 0;
-		if (N % 2) {
-			for (i = 0; 2 * i + 1 <= degree; ++i) {
-				upper[i] = upper[2 * i + 1];
-			}
-			newupperdeg = i - 1;
-		} else {
-			for (i = 0; 2 * i <= degree; ++i) {
-				upper[i] = upper[2 * i];
-			}
-			newupperdeg = i - 1;
-		}
-		N = N / 2;
-		degree = Min(N, Max(newlowerdeg, newupperdeg) * 2);
-		upper.arr.Set(newupperdeg + 1, degree + 1, Mod<P>().Set(0));
-		lower.arr.Set(newlowerdeg + 1, degree + 1, Mod<P>().Set(0));
-		upper.Degree = degree;
-		lower.Degree = degree;
+		N >>= 1;
+		upper = std::move(new_upper);
+		lower = std::move(new_lower);
 	}
-	return (upper[0] / lower[0]);
+	return upper[0] / lower[0];
 }
 
 /* WIP

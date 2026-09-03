@@ -1,5 +1,13 @@
 #pragma once
-#include "../basic.cpp"
+#include "array.cpp"
+#include "base.cpp"
+#include "function_type.cpp"
+#include "light_array.cpp"
+#include "min_max.cpp"
+#include "stack_queue.cpp"
+#include "template_functions.cpp"
+#include "tuple_pair.cpp"
+#include "utils.cpp"
 template <typename T, typename U> struct AVLTreeNode {
 	AVLTreeNode* child1;
 	AVLTreeNode* child2;

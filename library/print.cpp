@@ -11,26 +11,26 @@ template <typename D> void PrintDouble(D val) {
 template <typename T, typename... Args> void Print(T&& val, Args&&... args) {
 	cout << std::forward<T>(val);
 	((cout << ", " << std::forward<Args>(args)), ...);
-	cout << endl;
+	cout << '\n';
 }
 
 void PrintYes(bool flag) {
 	if (flag)
-		cout << "Yes" << endl;
+		cout << "Yes" << '\n';
 	else
-		cout << "No" << endl;
+		cout << "No" << '\n';
 }
 
 void PrintYES(bool flag) {
 	if (flag)
-		cout << "YES" << endl;
+		cout << "YES" << '\n';
 	else
-		cout << "NO" << endl;
+		cout << "NO" << '\n';
 }
 
 void Printyes(bool flag) {
 	if (flag)
-		cout << "yes" << endl;
+		cout << "yes" << '\n';
 	else
-		cout << "no" << endl;
+		cout << "no" << '\n';
 }

@@ -47,6 +47,9 @@ template <typename T> void LightArray<T>::Set(size_t start, size_t end, T val) {
 
 template <typename T> void LightArray<T>::Allocate(size_t n) {
 	Length = n;
+	if (arr == nullptr) {
+		delete[] arr;
+	}
 	arr = new (std::nothrow) T[n];
 	if (arr == nullptr)
 		std::exit(EXIT_FAILURE);

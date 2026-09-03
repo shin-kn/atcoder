@@ -67,3 +67,7 @@ concept ArrayLike = requires(Arr arr, ull index) {
 	{ arr.Length } -> std::convertible_to<ull>;
 	{ arr[index] } -> std::same_as<T&>;
 };
+
+template <typename ArrayType>
+using ArrayElement =
+  std::remove_cvref_t<decltype(std::declval<ArrayType>()[0])>;
