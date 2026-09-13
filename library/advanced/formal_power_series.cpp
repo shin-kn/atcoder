@@ -5,8 +5,10 @@ template <typename T> class FormalPowerSeries;
 
 // i<=Degree => arr[i] must be initialized by user
 
-template <size_t P> class FormalPowerSeries<Mod<P>> {
+template <ull P> class FormalPowerSeries<Mod<P>> {
 public:
+	FormalPowerSeries() {}
+	constexpr static ull ModP = P;
 	LightArray<Mod<P>> arr;
 	FormalPowerSeries(ull N) { SetDegree(N); }
 	ull Degree;
@@ -28,6 +30,7 @@ public:
 	}
 
 	inline Mod<P>& operator[](size_t index) { return arr[index]; }
+	inline const Mod<P>& operator[](size_t index) const { return arr[index]; }
 
 	FormalPowerSeries Copy() {
 		FormalPowerSeries res(Degree);
@@ -39,6 +42,18 @@ public:
 
 template <size_t P> using FPS = FormalPowerSeries<Mod<P>>;
 
+using NFPS = FPS<NiceP>;
+
+template <ull P> std::ostream& operator<<(std::ostream& os, const FPS<P>& fps) {
+	for (ull i = fps.Degree;; --i) {
+		os << fps[i] << (i == 0 ? "" : "x^" + std::to_string(i));
+		if (i == 0)
+			break;
+		os << " + ";
+	}
+	return os;
+}
+
 template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 	size_t deg = Min(f1.Degree + f2.Degree, max_deg);
@@ -49,15 +64,12 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 		// length = Max(length, (size_t)4); // degree>=2
 		//  NTT
 
-		Mod<P> zeta =
-		  Power(Mod<P>().Set((size_t)15311432), ((size_t)1 << (23 - loglength)));
-
 		LightArray<Mod<P>> arr_1, arr_2;
-		fourier_transform_inverse(
-		  f1.arr, f2.arr, arr_1, arr_2, length, zeta, Min(f1.Degree + 1, deg + 1),
-		  Min(f2.Degree + 1, deg + 1)
-		);
 
+		fourier_transform_inverse_entry<(ull)0, (ull)23, P, LightArray<Mod<P>>>(
+		  f1.arr, f2.arr, arr_1, arr_2, Min(f1.Degree + 1, deg + 1),
+		  Min(f2.Degree + 1, deg + 1), loglength
+		);
 		LightArray<Mod<P>> arr_3(length);
 		Mod<P> coef = Mod<P>(1) / Mod<P>(length);
 		for (size_t i = 0; i < length; ++i) {
@@ -66,12 +78,50 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 		FPS<P> res(deg);
 		LightArray<Mod<P>> res_raw =
-		  fourier_transform_forward(arr_3, length, zeta, length);
+		  fourier_transform_forward_entry<(ull)0, (ull)23, P, LightArray<Mod<P>>>(
+		    arr_3, length, loglength
+		  );
 		for (ull i = 0; i <= deg; ++i)
 			res.arr[i] = res_raw[i];
 		return res;
 	}
 	return FPS<P>(0);
+}
+
+template <typename ArrayType>
+  requires std::
+    same_as<ArrayElement<ArrayType>, FPS<ArrayElement<ArrayType>::ModP>>
+  FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr, ull max_deg) {
+	using FPS_Type = FPS<ArrayElement<ArrayType>::ModP>;
+	if (arr.Length == 0) {
+		FPS_Type res(0);
+		res[0] = 1;
+		return res;
+	}
+	LightArray<FPS_Type> new_arr(arr.Length);
+
+	Heap<ull, Pair<ull, bool>> heap; //(index,is_new)
+	for (ull i = 0; i < arr.Length; ++i) {
+		heap.Push(arr[i].Degree, Pair(i, false));
+	}
+	while (heap.Size > 1) {
+		Pair loc_1 = heap.Pop();
+		Pair loc_2 = heap.Pop();
+		new_arr[loc_1.val1] = Prod(
+		  (loc_1.val2 ? new_arr[loc_1.val1] : arr[loc_1.val1]),
+		  (loc_2.val2 ? new_arr[loc_2.val1] : arr[loc_2.val1]), max_deg
+		);
+		heap.Push(new_arr[loc_1.val1].Degree, Pair(loc_1.val1, true));
+	}
+	Pair res_loc = heap.Pop();
+	if (res_loc.val2)
+		return std::move(new_arr[res_loc.val1]);
+	return arr[res_loc.val1].Copy();
+}
+
+template <typename ArrayType>
+FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr) {
+	return Prod(arr, Infty<ull>);
 }
 
 template <size_t P>

@@ -185,9 +185,7 @@ public:
 	FastHeap(size_t n) { Allocate(n); }
 	void Allocate(size_t n) {
 		n = BiggerPower2(n);
-		arr = new (std::nothrow) T[n];
-		if (arr == nullptr)
-			std::exit(EXIT_FAILURE);
+		arr = new T[n];
 	}
 	~FastHeap() {
 		if (arr != nullptr) {

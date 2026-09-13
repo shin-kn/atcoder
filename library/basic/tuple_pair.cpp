@@ -22,6 +22,17 @@ public:
 	}
 
 	T& operator[](size_t idx) { return Val[idx]; }
+
+	Tuple operator+(Tuple other)
+	  requires requires(T a, T b) { a + b; }
+	{
+		Tuple res;
+		for (size_t i = 0; i < N; ++i) {
+			res.Val[i] = Val[i] + other.Val[i];
+		}
+		return res;
+	}
+
 	bool operator<(Tuple<T, N> other) {
 		for (size_t i = 0; i < N; ++i) {
 			if (this->Val[i] < other.Val[i]) {
@@ -33,33 +44,12 @@ public:
 		}
 		return false;
 	}
-	bool operator>(Tuple<T, N> other) {
-		for (size_t i = 0; i < N; ++i) {
-			if (this->Val[i] > other.Val[i]) {
-				return true;
-			}
-			if (this->Val[i] < other.Val[i]) {
-				return false;
-			}
-		}
-		return false;
-	}
 
-	bool operator<=(Tuple<T, N> other) { return !(this->operator>(other)); }
-	bool operator>=(Tuple<T, N> other) { return !(this->operator<(other)); }
-
-	bool operator==(Tuple<T, N>& other) {
-		for (size_t i = 0; i < N; ++i) {
-			if (this->Val[i] != other.Val[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+	auto operator<=>(const Tuple&) const = default;
 };
 
 template <typename T, typename... Args>
-Tuple(T, Args...) -> Tuple<T, sizeof...(Args) + 1>;
+Tuple(T, Args...) -> Tuple<std::remove_cvref_t<T>, sizeof...(Args) + 1>;
 
 template <typename T, ull N>
 std::ostream& operator<<(std::ostream& os, Tuple<T, N>& tuple) {
@@ -84,8 +74,6 @@ public:
 	T1 val1;
 	T2 val2;
 
-	bool operator<(Pair other)
-	  requires SmallerDefined<T1> && SmallerDefined<T2>;
 	Pair operator+(Pair other)
 	  requires requires(Pair a, Pair b) {
 		  a.val1 + b.val1;
@@ -94,17 +82,11 @@ public:
 	{
 		return Pair(val1 + other.val1, val2 + other.val2);
 	}
+	auto operator<=>(const Pair&) const = default;
 };
 
-template <typename T1, typename T2>
-bool Pair<T1, T2>::operator<(Pair<T1, T2> other)
-  requires SmallerDefined<T1> && SmallerDefined<T2>
-{
-	if (val1 < other.val1 || other.val1 < val1) {
-		return val1 < other.val1;
-	}
-	return val2 < other.val2;
-}
+template <typename T, typename U>
+Pair(T, U) -> Pair<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& os, Pair<T1, T2> val) {

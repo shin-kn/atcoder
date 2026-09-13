@@ -37,6 +37,8 @@ constexpr ull SomeBigSize = 1024 * 1024 * 1;
 
 constexpr ull NMOD_COMB_CACHE_N = 1024;
 
+constexpr ull FOURIER_NO_DFS = 256;
+
 template <typename T> constexpr T PI = std::numbers::pi_v<T>;
 
 template <std::integral T> class InftyValue {
@@ -69,5 +71,9 @@ concept ArrayLike = requires(Arr arr, ull index) {
 };
 
 template <typename ArrayType>
-using ArrayElement =
+using ArrayElementWithoutCheck =
   std::remove_cvref_t<decltype(std::declval<ArrayType>()[0])>;
+
+template <typename ArrayType>
+  requires ArrayLike<ArrayType, ArrayElementWithoutCheck<ArrayType>>
+using ArrayElement = ArrayElementWithoutCheck<ArrayType>;

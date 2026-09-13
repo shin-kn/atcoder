@@ -40,21 +40,21 @@ public:
 	constexpr static size_t P_dash = 998244351;
 	constexpr static size_t ModR = ((size_t)1 << LogR) - 1;
 
-	Mod() { val = 0; }
+	constexpr Mod() { val = 0; }
 
-	Mod(ull n) { this->Set(n); }
-	inline Mod(ull n, DirectInit) : val(n) {}
+	constexpr Mod(ull n) { this->Set(n); }
+	constexpr inline Mod(ull n, DirectInit) : val(n) {}
 
-	inline static Mod Raw(ull n) { return Mod(n, DirectInit{}); }
+	constexpr inline static Mod Raw(ull n) { return Mod(n, DirectInit{}); }
 
-	inline size_t Montgomery(size_t T) {
+	constexpr inline size_t Montgomery(size_t T) {
 		size_t res = (((((T & ModR) * P_dash) & ModR) * P + T) >> LogR);
 		if (res >= P)
 			res -= P;
 		return res;
 	}
 
-	inline Mod& Set(size_t init) {
+	constexpr inline Mod& Set(size_t init) {
 		if constexpr (IsMont) {
 			if (init == 0)
 				val = init;
@@ -69,34 +69,34 @@ public:
 		return *this;
 	}
 
-	inline Mod operator+(Mod other) {
+	constexpr inline Mod operator+(Mod other) {
 		size_t res = val + other.val;
-		if (res > P) {
+		if (res >= P) {
 			return Raw(res - P);
 		}
 		return Raw(res);
 	}
-	inline Mod& operator+=(Mod other) {
+	constexpr inline Mod& operator+=(Mod other) {
 		val += other.val;
 		if (val >= P)
 			val -= P;
 		return *(this);
 	}
-	inline Mod operator-(Mod other) {
+	constexpr inline Mod operator-(Mod other) {
 		size_t res = P + val - other.val;
 		if (res >= P) {
 			return Raw(res - P);
 		}
 		return Raw(res);
 	}
-	inline Mod& operator-=(Mod other) {
+	constexpr inline Mod& operator-=(Mod other) {
 		val += P;
 		val -= other.val;
 		if (val >= P)
 			val -= P;
 		return *(this);
 	}
-	inline Mod operator*(Mod other) {
+	constexpr inline Mod operator*(Mod other) {
 		if constexpr (IsMont) {
 			return Raw(Montgomery(val * other.val));
 		} else {
@@ -106,11 +106,11 @@ public:
 			return Raw(res);
 		}
 	}
-	inline Mod operator*(ull other) { return *this * Mod().Set(other); }
+	constexpr inline Mod operator*(ull other) { return *this * Mod().Set(other); }
 
 	inline Mod operator/(Mod other) { return (*this) * other.Inv(); }
 
-	inline Mod& operator*=(Mod other) {
+	constexpr inline Mod& operator*=(Mod other) {
 		if constexpr (IsMont) {
 			val = Montgomery(val * other.val);
 		} else {
@@ -131,8 +131,7 @@ public:
 		return (*this);
 	}
 	inline Mod Inv() {
-		if (val == 0)
-			std::exit(EXIT_FAILURE);
+		assert(val != 0);
 		if constexpr (IsMont) {
 			return Raw(
 			  static_cast<size_t>(
@@ -156,16 +155,16 @@ public:
 		}
 	}
 
-	bool operator==(Mod other) { return val == other.val; }
-	size_t Value() {
+	constexpr bool operator==(Mod other) { return val == other.val; }
+	constexpr size_t Value() {
 		if constexpr (IsMont) {
 			return Montgomery(this->val);
 		} else {
 			return val;
 		}
 	}
-	Mod& operator=(size_t num) { return Set(num); }
-	Mod& operator=(Mod other) {
+	constexpr Mod& operator=(size_t num) { return Set(num); }
+	constexpr Mod& operator=(Mod other) {
 		val = other.val;
 		return *this;
 	}
@@ -176,308 +175,246 @@ template <size_t P> std::ostream& operator<<(std::ostream& os, Mod<P> val) {
 	return os;
 }
 
-template <ull P, ArrayLike<Mod<P>> ArrayType>
-inline LightArray<Mod<P>> fourier_transform_forward(
-  ArrayType& arr, ull length, Mod<P> zeta, ull arr_len
-) {
-	assert(length >= 1 && (ull)1 << Log2(length) == length);
-	ull total_deg = Log2(length) + 1;
-	Mod<P>* cache = new Mod<P>[length]();
-	Mod<P>* zeta_cache = new Mod<P>[length / 2];
-	zeta_cache[0] = Mod<P>(1);
-	for (ull i = 1; i < length / 2; ++i)
-		zeta_cache[i] = zeta_cache[i - 1] * zeta;
-
-	auto dfs = [&](auto& self, ull deg, ull start) -> void {
-		Mod<P>* this_cache = cache + start;
-		if (deg == total_deg - 1) {
-			if (start < arr_len) {
-				*this_cache = arr[start];
-			}
-			return;
-		}
-
-		ull half_len = 1ull << (total_deg - 1 - deg - 1);
-		self(self, deg + 1, start);
-		self(self, deg + 1, start + half_len);
-
-		Mod<P>* this_zeta_cache = zeta_cache;
-		for (ull i = 0; i < half_len; ++i) {
-			Mod<P> even = this_cache[i];
-			Mod<P> odd = (*this_zeta_cache) * this_cache[half_len + i];
-			this_cache[i] = even + odd;
-			this_cache[half_len + i] = even - odd;
-			this_zeta_cache += (ull)1 << deg;
-		}
-	};
-
-	dfs(dfs, 0, 0);
-
-	delete[] zeta_cache;
-	return LightArray(cache, length);
+template <ull P> constexpr Mod<P> NthRoot(ull n) {
+	static_assert(P == NiceP);
+	// assert(n <= (ull)1 << 23);
+	ull loglength = Log2(n);
+	// assert((ull)1<<loglength==n);
+	return Power(Mod<P>((ull)15311432), ((size_t)1 << (23 - loglength)));
 }
 
-template <ull P, ArrayLike<Mod<P>> ArrayType>
+template <ull P, bool Inverse = false> class NthRootsCacheManagerClass {
+public:
+	inline static Mod<P>*
+	  cache[24]{}; // 24 if P=NiceP, we will later extends to other Ps
+
+	Mod<P>* get_cache(ull N) {
+		ull log_len = Log2(N);
+		if (cache[log_len] != nullptr)
+			return cache[log_len];
+
+		Mod<P> zeta = Inverse ? Mod<P>(1) / NthRoot<P>(N) : NthRoot<P>(N);
+		ull half_len = N >> 1;
+		cache[log_len] = new Mod<P>[half_len];
+		Mod<P>* this_cache = cache[log_len];
+		this_cache[0] = 1;
+		for (ull i = 1; i < half_len; ++i) {
+			this_cache[i] = this_cache[i - 1] * zeta;
+		}
+		return this_cache;
+	}
+};
+
+NthRootsCacheManagerClass<NiceP> NiceRoots;
+NthRootsCacheManagerClass<NiceP, true> NiceInverseRoots;
+
+template <ull P, ArrayLike<Mod<P>> ArrayType, ull TotalDeg, ull Deg>
+void fourier_transform_forward_part(
+  Mod<P>* cache, ArrayType& arr, ull arr_len, ull start
+) {
+	static constexpr ull Length = 1ull << (TotalDeg - Deg - 1);
+	if constexpr (Deg == TotalDeg - 1) {
+		if (start < arr_len) {
+			*cache = arr[start];
+		}
+		return;
+	} else {
+
+		if constexpr (Length <= FOURIER_NO_DFS) {
+
+			for (ull i = 0; i < Length; ++i) {
+				if (start + i < arr_len) {
+					cache[i] = arr[start + i];
+				}
+			}
+
+			ull half_len = 1;
+			ull deg = TotalDeg - 1;
+			while (deg > Deg) {
+				--deg;
+				Mod<P>* zetas_cache_origin = NiceRoots.get_cache(half_len << 1);
+				for (ull j = 0; j < (ull)1 << (deg - Deg); ++j) {
+					Mod<P>* zetas_cache = zetas_cache_origin;
+					for (ull i = 0; i < half_len; ++i) {
+						Mod<P> even = cache[i];
+						Mod<P> odd = (*zetas_cache) * cache[half_len + i];
+						cache[i] = even + odd;
+						cache[half_len + i] = even - odd;
+						++zetas_cache;
+					}
+					cache += half_len << 1;
+				}
+				half_len <<= 1;
+				cache -= Length;
+			}
+		} else {
+			static constexpr ull half_len = 1ull << (TotalDeg - Deg - 2);
+			fourier_transform_forward_part<P, ArrayType, TotalDeg, Deg + 1>(
+			  cache, arr, arr_len, start
+			);
+			fourier_transform_forward_part<P, ArrayType, TotalDeg, Deg + 1>(
+			  cache + half_len, arr, arr_len, start + half_len
+			);
+
+			Mod<P>* zetas_cache = NiceRoots.get_cache(half_len << 1);
+			for (ull i = 0; i < half_len; ++i) {
+				Mod<P> even = cache[i];
+				Mod<P> odd = (*zetas_cache) * cache[half_len + i];
+				cache[i] = even + odd;
+				cache[half_len + i] = even - odd;
+				++zetas_cache;
+			}
+		}
+	}
+}
+
+template <ull P, ArrayLike<Mod<P>> ArrayType, ull Length>
+LightArray<Mod<P>> fourier_transform_forward(ArrayType& arr, ull arr_len) {
+	static_assert(Length >= 1 && (ull)1 << Log2(Length) == Length);
+	static_assert(P == NiceP);
+	constexpr static ull total_deg = Log2(Length) + 1;
+	Mod<P>* cache = new Mod<P>[Length]();
+	arr_len = Min(arr_len, Length);
+
+	fourier_transform_forward_part<P, ArrayType, total_deg, 0>(
+	  cache, arr, arr_len, 0
+	);
+	return LightArray(cache, Length);
+}
+
+template <ull Start, ull End, ull P, ArrayLike<Mod<P>> ArrayType>
+LightArray<Mod<P>>
+fourier_transform_forward_entry(ArrayType& arr, ull arr_len, ull degree) {
+	if constexpr (Start == End) {
+		return fourier_transform_forward<P, ArrayType, (ull)1 << Start>(
+		  arr, arr_len
+		);
+	} else {
+		constexpr ull tested = Start + (End - Start) / 2;
+		if (degree <= tested) {
+			return fourier_transform_forward_entry<Start, tested, P, ArrayType>(
+			  arr, arr_len, degree
+			);
+		} else {
+			return fourier_transform_forward_entry<tested + 1, End, P, ArrayType>(
+			  arr, arr_len, degree
+			);
+		}
+	}
+}
+
+template <ull P, ull TotalDeg, ull Deg>
+void fourier_transform_inverse_part(Mod<P>* cache_1, Mod<P>* cache_2) {
+	static constexpr ull Length = 1ull << (TotalDeg - Deg - 1);
+	if constexpr (Deg == TotalDeg - 1) {
+		return;
+	} else {
+
+		if constexpr (Length <= FOURIER_NO_DFS) {
+
+			ull half_len = 1ull << (TotalDeg - Deg - 2);
+			for (ull deg = Deg; deg < TotalDeg - 1; ++deg) {
+				Mod<P>* inv_zetas_cache_origin =
+				  NiceInverseRoots.get_cache(half_len << 1);
+				for (ull j = 0; j < (ull)1 << (deg - Deg); ++j) {
+					Mod<P>* inv_zetas_cache = inv_zetas_cache_origin;
+					for (ull i = 0; i < half_len; ++i) {
+						Mod<P> even_1 = cache_1[i];
+						Mod<P> odd_1 = cache_1[half_len + i];
+						cache_1[i] = (even_1 + odd_1);
+						cache_1[half_len + i] = (even_1 - odd_1) * (*inv_zetas_cache);
+
+						Mod<P> even_2 = cache_2[i];
+						Mod<P> odd_2 = cache_2[half_len + i];
+						cache_2[i] = (even_2 + odd_2);
+						cache_2[half_len + i] = (even_2 - odd_2) * (*inv_zetas_cache);
+
+						++inv_zetas_cache;
+					}
+					cache_1 += half_len << 1;
+					cache_2 += half_len << 1;
+				}
+				half_len >>= 1;
+				cache_1 -= Length;
+				cache_2 -= Length;
+			}
+		} else {
+			static constexpr ull half_len = 1ull << (TotalDeg - Deg - 2);
+			Mod<P>* inv_zetas_cache = NiceInverseRoots.get_cache(half_len << 1);
+			for (ull i = 0; i < half_len; ++i) {
+				Mod<P> even_1 = cache_1[i];
+				Mod<P> odd_1 = cache_1[half_len + i];
+				cache_1[i] = (even_1 + odd_1);
+				cache_1[half_len + i] = (even_1 - odd_1) * (*inv_zetas_cache);
+
+				Mod<P> even_2 = cache_2[i];
+				Mod<P> odd_2 = cache_2[half_len + i];
+				cache_2[i] = (even_2 + odd_2);
+				cache_2[half_len + i] = (even_2 - odd_2) * (*inv_zetas_cache);
+
+				++inv_zetas_cache;
+			}
+			fourier_transform_inverse_part<P, TotalDeg, Deg + 1>(cache_1, cache_2);
+			fourier_transform_inverse_part<P, TotalDeg, Deg + 1>(
+			  cache_1 + half_len, cache_2 + half_len
+			);
+		}
+	}
+}
+
+template <ull P, ArrayLike<Mod<P>> ArrayType, ull Length>
 void fourier_transform_inverse(
   ArrayType& arr_1,
   ArrayType& arr_2,
   LightArray<Mod<P>>& res_1,
   LightArray<Mod<P>>& res_2,
-  ull length,
-  Mod<P> zeta,
   ull arr_len_1,
   ull arr_len_2
 ) {
-	assert(length >= 1 && (ull)1 << Log2(length) == length);
-	ull total_deg = Log2(length) + 1;
-	Mod<P>* cache_1 = new Mod<P>[length]();
-	Mod<P>* cache_2 = new Mod<P>[length]();
+	static_assert(Length >= 1 && (ull)1 << Log2(Length) == Length);
+	static_assert(P == NiceP);
+	constexpr static ull total_deg = Log2(Length) + 1;
+	Mod<P>* cache_1 = new Mod<P>[Length]();
+	Mod<P>* cache_2 = new Mod<P>[Length]();
+	arr_len_1 = Min(arr_len_1, Length);
+	arr_len_2 = Min(arr_len_2, Length);
 	for (ull i = 0; i < arr_len_1; ++i) {
 		cache_1[i] = arr_1[i];
 	}
-
 	for (ull i = 0; i < arr_len_2; ++i) {
 		cache_2[i] = arr_2[i];
 	}
-	Mod<P>* invs_cache = new Mod<P>[length / 2];
-	invs_cache[0] = Mod<P>(1);
-	Mod<P> inv_zeta = Mod<P>(1) / zeta;
-	for (ull i = 1; i < length / 2; ++i) {
-		invs_cache[i] = invs_cache[i - 1] * inv_zeta;
-	}
-
-	auto dfs = [&](auto& self, ull deg, ull start) -> void {
-		if (deg == total_deg - 1) {
-			return;
-		}
-
-		ull half_len = 1ull << (total_deg - 1 - deg - 1);
-
-		Mod<P>* this_cache_1 = cache_1 + start;
-		Mod<P>* this_cache_2 = cache_2 + start;
-
-		Mod<P>* this_invs_cache = invs_cache;
-		for (ull i = 0; i < half_len; ++i) {
-			Mod<P> even_1 = this_cache_1[i];
-			Mod<P> odd_1 = this_cache_1[half_len + i];
-			this_cache_1[i] = (even_1 + odd_1);
-			this_cache_1[half_len + i] = (even_1 - odd_1) * (*this_invs_cache);
-
-			Mod<P> even_2 = this_cache_2[i];
-			Mod<P> odd_2 = this_cache_2[half_len + i];
-			this_cache_2[i] = (even_2 + odd_2);
-			this_cache_2[half_len + i] = (even_2 - odd_2) * (*this_invs_cache);
-
-			this_invs_cache += (ull)1 << deg;
-		}
-
-		// inv_zeta at depth deg+1 is inv_zeta^2, matching zeta^2
-		self(self, deg + 1, start);
-		self(self, deg + 1, start + half_len);
-	};
-	dfs(dfs, 0, 0);
-
-	res_1 = LightArray(cache_1, length);
-	res_2 = LightArray(cache_2, length);
-
-	delete[] invs_cache;
+	fourier_transform_inverse_part<P, total_deg, 0>(cache_1, cache_2);
+	res_1 = LightArray(cache_1, Length);
+	res_2 = LightArray(cache_2, Length);
 }
 
-template <size_t P>
-inline LightArray<Mod<P>>
-fouriertransform_freq(Array<Mod<P>>& arr, size_t degree, Mod<P> zeta) {
-	size_t length = 1 << degree;
-
-	Mod<P>** res = new (std::nothrow) Mod<P>*[degree + 1];
-	if (res == nullptr)
-		std::exit(EXIT_FAILURE);
-	for (size_t i = 1; i <= degree; ++i) {
-		res[i] = new (std::nothrow) Mod<P>[length];
-		if (res[i] == nullptr)
-			std::exit(EXIT_FAILURE);
-	}
-
-	Mod<P> tempzeta;
-	tempzeta = 1;
-	LightArray<Mod<P>> cache;
-	cache.Allocate(length >> 1);
-	{
-		size_t loc1 = 0;
-		size_t loc2 = length >> 1;
-
-		while (loc2 < length) {
-			res[1][loc1] = arr[loc1] + arr[loc2];
-			res[1][loc2] = tempzeta * (arr[loc1] - arr[loc2]);
-			cache[loc1] = tempzeta;
-			tempzeta *= zeta;
-			++loc2;
-			++loc1;
+template <ull Start, ull End, ull P, ArrayLike<Mod<P>> ArrayType>
+void fourier_transform_inverse_entry(
+  ArrayType& arr_1,
+  ArrayType& arr_2,
+  LightArray<Mod<P>>& res_1,
+  LightArray<Mod<P>>& res_2,
+  ull arr_len_1,
+  ull arr_len_2,
+  ull degree
+) {
+	if constexpr (Start == End) {
+		fourier_transform_inverse<P, ArrayType, (ull)1 << Start>(
+		  arr_1, arr_2, res_1, res_2, arr_len_1, arr_len_2
+		);
+	} else {
+		constexpr ull tested = Start + (End - Start) / 2;
+		if (degree <= tested) {
+			fourier_transform_inverse_entry<Start, tested, P, ArrayType>(
+			  arr_1, arr_2, res_1, res_2, arr_len_1, arr_len_2, degree
+			);
+		} else {
+			fourier_transform_inverse_entry<tested + 1, End, P, ArrayType>(
+			  arr_1, arr_2, res_1, res_2, arr_len_1, arr_len_2, degree
+			);
 		}
 	}
-
-	for (size_t deg = 2; deg < degree; ++deg) {
-		size_t looplength = (size_t)1 << (degree - deg);
-		size_t loopnum = (size_t)1 << (deg - 1);
-		size_t loc1 = 0;
-		size_t loc2 = looplength;
-		size_t cache_dif = loopnum;
-		Mod<P>* dist = res[deg];
-		Mod<P>* olddist = res[deg - 1];
-		for (size_t i = 0; i < loopnum; ++i) {
-			size_t cache_loc = 0;
-			for (size_t j = 0; j < looplength; ++j) {
-				dist[loc1] = olddist[loc1] + olddist[loc2];
-				dist[loc2] = cache[cache_loc] * (olddist[loc1] - olddist[loc2]);
-				cache_loc += cache_dif;
-				++loc1;
-				++loc2;
-			}
-			loc1 = loc2;
-			loc2 = loc1 + looplength;
-		}
-	}
-
-	{
-		size_t deg = degree;
-		size_t looplength = (size_t)1 << (degree - deg);
-		size_t loopnum = (size_t)1 << (deg - 1);
-		size_t loc1 = 0;
-		size_t loc2 = looplength;
-		Mod<P>* dist = res[deg];
-		Mod<P>* olddist = res[deg - 1];
-		for (size_t i = 0; i < loopnum; ++i) {
-			for (size_t j = 0; j < looplength; ++j) {
-				dist[loc1] = olddist[loc1] + olddist[loc2];
-				dist[loc2] = (olddist[loc1] - olddist[loc2]);
-				++loc1;
-				++loc2;
-			}
-			loc1 = loc2;
-			loc2 = loc1 + looplength;
-		}
-	}
-	Mod<P>* result = res[degree];
-	for (size_t i = 1; i < degree; ++i) {
-		delete[] res[i];
-	}
-	delete[] res;
-	return LightArray<Mod<P>>(result, length);
-}
-
-template <size_t P>
-inline LightArray<Mod<P>>
-fouriertransform_time(Array<Mod<P>>& arr, size_t degree, Mod<P> zeta) {
-	size_t length = 1 << degree;
-
-	Mod<P>** res = new (std::nothrow) Mod<P>*[degree + 1];
-	if (res == nullptr)
-		std::exit(EXIT_FAILURE);
-	for (size_t i = 1; i <= degree; ++i) {
-		res[i] = new (std::nothrow) Mod<P>[length];
-		if (res[i] == nullptr)
-			std::exit(EXIT_FAILURE);
-	}
-
-	Mod<P> tempzeta;
-	tempzeta = 1;
-	LightArray<Mod<P>> cache;
-	cache.Allocate(length >> 1);
-	{
-		size_t looplength = length >> 1;
-		for (size_t i = 0; i < looplength; ++i) {
-			cache[i] = tempzeta;
-			tempzeta *= zeta;
-		}
-	}
-	{
-		size_t deg = 1;
-		size_t looplength = (size_t)1 << (deg - 1);
-		size_t loopnum = (size_t)1 << (degree - deg - 1);
-		size_t loc1 = 0;
-		size_t loc2 = looplength;
-		size_t cache_dif = (size_t)1 << (degree - deg - 1);
-		Mod<P>* dist = res[deg];
-		Array<Mod<P>>& olddist = arr;
-		for (size_t i = 0; i < loopnum; ++i) {
-			for (size_t j = 0; j < looplength; ++j) {
-				dist[loc1] = olddist[loc1] + olddist[loc2];
-				dist[loc2] = (olddist[loc1] - olddist[loc2]);
-				++loc1;
-				++loc2;
-			}
-			size_t cache_loc_1 = 0;
-			size_t cache_loc_2 = length >> 2;
-
-			loc1 = loc2;
-			loc2 = loc1 + looplength;
-			for (size_t j = 0; j < looplength; ++j) {
-				dist[loc1] = cache[cache_loc_1] * (olddist[loc1] + olddist[loc2]);
-				dist[loc2] = cache[cache_loc_2] * (olddist[loc1] - olddist[loc2]);
-				++loc1;
-				++loc2;
-				cache_loc_1 += cache_dif;
-				cache_loc_2 += cache_dif;
-			}
-
-			loc1 = loc2;
-			loc2 = loc1 + looplength;
-		}
-	}
-
-	for (size_t deg = 2; deg < degree; ++deg) {
-		size_t looplength = (size_t)1 << (deg - 1);
-		size_t loopnum = (size_t)1 << (degree - deg - 1);
-		size_t loc1 = 0;
-		size_t loc2 = looplength;
-		size_t cache_dif = (size_t)1 << (degree - deg - 1);
-		Mod<P>* dist = res[deg];
-		Mod<P>* olddist = res[deg - 1];
-		for (size_t i = 0; i < loopnum; ++i) {
-			for (size_t j = 0; j < looplength; ++j) {
-				dist[loc1] = olddist[loc1] + olddist[loc2];
-				dist[loc2] = (olddist[loc1] - olddist[loc2]);
-				++loc1;
-				++loc2;
-			}
-			size_t cache_loc_1 = 0;
-			size_t cache_loc_2 = length >> 2;
-
-			loc1 = loc2;
-			loc2 = loc1 + looplength;
-			for (size_t j = 0; j < looplength; ++j) {
-				dist[loc1] = cache[cache_loc_1] * (olddist[loc1] + olddist[loc2]);
-				dist[loc2] = cache[cache_loc_2] * (olddist[loc1] - olddist[loc2]);
-				++loc1;
-				++loc2;
-				cache_loc_1 += cache_dif;
-				cache_loc_2 += cache_dif;
-			}
-
-			loc1 = loc2;
-			loc2 = loc1 + looplength;
-		}
-	}
-	{
-		size_t deg = degree;
-		size_t loc1 = 0;
-		size_t loc2 = length >> 1;
-		Mod<P>* dist = res[deg];
-		Mod<P>* olddist = res[deg - 1];
-		size_t looplength = length >> 1;
-		for (size_t j = 0; j < looplength; ++j) {
-			dist[loc1] = olddist[loc1] + olddist[loc2];
-			dist[loc2] = (olddist[loc1] - olddist[loc2]);
-			++loc1;
-			++loc2;
-		}
-	}
-
-	Mod<P>* result = res[degree];
-	for (size_t i = 1; i < degree; ++i) {
-		delete[] res[i];
-	}
-	delete[] res;
-	return LightArray<Mod<P>>(result, length);
 }
 
 using NMod = Mod<NiceP>;

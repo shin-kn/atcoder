@@ -42,7 +42,7 @@ public:
 	inline T& operator[](size_t idx);
 	inline T& operator()(size_t idx);
 
-	inline void Push(T val);
+	template <typename U> inline void Push(U&& val);
 
 	inline void Allocate(ull cap);
 
@@ -59,11 +59,13 @@ public:
 	inline void Clear();
 };
 
-template <typename T, bool Unsafe> void Array<T, Unsafe>::Push(T val) {
+template <typename T, bool Unsafe>
+template <typename U>
+void Array<T, Unsafe>::Push(U&& val) {
 	if constexpr (Unsafe) {
-		(*this)(Length) = val;
+		(*this)(Length) = std::forward<U>(val);
 	} else {
-		(*this)[Length] = val;
+		(*this)[Length] = std::forward<U>(val);
 	}
 }
 
@@ -93,14 +95,10 @@ Array<T, Unsafe>::Array(LightArray<T>&& other) {
 	Capacity = other.Length;
 	pointerscapacity = 1;
 	pointerslength = 1;
-	pointers = new (std::nothrow) T*[pointerscapacity];
-	if (pointers == nullptr)
-		std::exit(EXIT_FAILURE);
+	pointers = new T*[pointerscapacity];
 	pointers[0] = other.arr;
 
-	arr = new (std::nothrow) T*[Length];
-	if (arr == nullptr)
-		std::exit(EXIT_FAILURE);
+	arr = new T*[Length];
 	for (size_t i = 0; i < Length; ++i) {
 		arr[i] = &(other.arr[i]);
 	}
@@ -156,9 +154,7 @@ inline void Array<T, Unsafe>::Allocate(ull cap) {
 	}
 
 	T** oldarr = arr;
-	arr = new (std::nothrow) T*[cap];
-	if (arr == nullptr)
-		std::exit(EXIT_FAILURE);
+	arr = new T*[cap];
 	for (size_t i = 0; i < Capacity; ++i) {
 		arr[i] = oldarr[i];
 	}
@@ -168,18 +164,14 @@ inline void Array<T, Unsafe>::Allocate(ull cap) {
 	if (pointerslength == pointerscapacity) {
 		pointerscapacity = BiggerPower2(pointerscapacity + 1);
 		T** oldpointers = pointers;
-		pointers = new (std::nothrow) T*[pointerscapacity];
-		if (pointers == nullptr)
-			std::exit(EXIT_FAILURE);
+		pointers = new T*[pointerscapacity];
 		for (size_t i = 0; i < pointerslength; ++i) {
 			pointers[i] = oldpointers[i];
 		}
 		if (oldpointers != nullptr)
 			delete[] oldpointers;
 	}
-	T* newpointer = new (std::nothrow) T[cap - Capacity];
-	if (newpointer == nullptr)
-		std::exit(EXIT_FAILURE);
+	T* newpointer = new T[cap - Capacity];
 	pointers[pointerslength] = newpointer;
 	++pointerslength;
 	for (size_t i = 0; i < cap - Capacity; ++i) {

@@ -21,6 +21,7 @@ public:
 	void Allocate(size_t n);
 
 	inline T& operator[](size_t idx) { return arr[idx]; }
+	inline const T& operator[](size_t idx) const { return arr[idx]; }
 	inline T& operator()(ull idx) { return arr[idx]; }
 
 	LightArray(LightArray& src) = delete;
@@ -47,12 +48,10 @@ template <typename T> void LightArray<T>::Set(size_t start, size_t end, T val) {
 
 template <typename T> void LightArray<T>::Allocate(size_t n) {
 	Length = n;
-	if (arr == nullptr) {
+	if (arr != nullptr) {
 		delete[] arr;
 	}
-	arr = new (std::nothrow) T[n];
-	if (arr == nullptr)
-		std::exit(EXIT_FAILURE);
+	arr = new T[n];
 }
 
 template <typename T> LightArray<T>::LightArray(LightArray&& src) {
