@@ -16,9 +16,9 @@ public:
 	AVLArrayClass(
 	  TypeVar<T>,
 	  TypeVar<U>,
-	  IndexLT& index_lt,
-	  DataLT& data_lt,
-	  IndexDataLT& index_data_lt
+	  const IndexLT& index_lt,
+	  const DataLT& data_lt,
+	  const IndexDataLT& index_data_lt
 	);
 
 	// index updating
@@ -69,9 +69,9 @@ template <
 AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::AVLArrayClass(
   TypeVar<T>,
   TypeVar<U>,
-  IndexLT& index_lt,
-  DataLT& data_lt,
-  IndexDataLT& index_data_lt
+  const IndexLT& index_lt,
+  const DataLT& data_lt,
+  const IndexDataLT& index_data_lt
 )
     : index_lt(index_lt), data_lt(data_lt), index_data_lt(index_data_lt),
       index_tree(AVLTree<T, U, IndexLT>(Type<T>, Type<U>, index_lt)),
@@ -192,7 +192,7 @@ template <
 U& AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Nth(ull ind) {
 	assert(ind < Length);
 	Resolve();
-	data_tree[ind];
+	data_tree.Nth(ind);
 	index = data_tree.Data();
 	queued = true;
 	index_tree.Find(index);
@@ -207,13 +207,15 @@ auto AVLArray(
 ) {
 	auto index_data_lt = [=](Pair<U, T> n1, Pair<U, T> n2) -> bool {
 		if (data_lt(n1.val1, n2.val1) || data_lt(n2.val1, n1.val1)) {
-			return data_lt(n1.val2, n2.val2);
+			return data_lt(n1.val1, n2.val1);
 		}
 		return index_lt(n1.val2, n2.val2);
 	};
-	AVLArrayClass<T, U, IndexLT, DataLT, decltype(index_data_lt)> avlarray(
-	  t_type, u_type, std::forward<IndexLT>(index_lt),
-	  std::forward<DataLT>(data_lt), index_data_lt
-	);
+	AVLArrayClass<
+	  T, U, std::decay_t<IndexLT>, std::decay_t<DataLT>, decltype(index_data_lt)>
+	  avlarray(
+	    t_type, u_type, std::forward<IndexLT>(index_lt),
+	    std::forward<DataLT>(data_lt), index_data_lt
+	  );
 	return avlarray;
 }

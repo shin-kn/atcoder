@@ -154,7 +154,7 @@ public:
 	);
 
 	T Eval(ull, ull); // evaluate [a,b]
-	void Action(U, ull, ull);
+	void Act(U, ull, ull);
 	void Set(ull, T);
 
 	ull Length;
@@ -166,7 +166,7 @@ public:
 	FunctionType<U(U, U)> convolute; // f,g -> f*g
 
 	LightArray<T> Val;
-	LightArray<U> Act;
+	LightArray<U> Actions;
 	LightArray<bool> ActIsNull;
 	LightArray<ull> CellStart;
 	LightArray<ull> CellEnd;
@@ -200,7 +200,7 @@ void LazySegmentTree<T, U>::Init(
 	CellLength = Length * 2 - 1;
 	Degree = Log2(Length * 2);
 	Val.Allocate(CellLength);
-	Act.Allocate(CellLength);
+	Actions.Allocate(CellLength);
 	ActIsNull.Allocate(CellLength);
 	ActIsNull.Set(true);
 	CellStart.Allocate(CellLength);
@@ -275,15 +275,16 @@ inline void LazySegmentTree<T, U>::Propagate(ull loc) {
 	ActIsNull[loc] = true;
 	if (Child(loc) < CellLength) {
 		if (!ActIsNull[Child(loc)])
-			Act[Child(loc)] = convolute(Act[loc], Act[Child(loc)]);
+			Actions[Child(loc)] = convolute(Actions[loc], Actions[Child(loc)]);
 		else {
-			Act[Child(loc)] = Act[loc];
+			Actions[Child(loc)] = Actions[loc];
 			ActIsNull[Child(loc)] = false;
 		}
 		if (!ActIsNull[Child(loc) + 1])
-			Act[Child(loc) + 1] = convolute(Act[loc], Act[Child(loc) + 1]);
+			Actions[Child(loc) + 1] =
+			  convolute(Actions[loc], Actions[Child(loc) + 1]);
 		else {
-			Act[Child(loc) + 1] = Act[loc];
+			Actions[Child(loc) + 1] = Actions[loc];
 			ActIsNull[Child(loc) + 1] = false;
 		}
 	}
@@ -293,7 +294,7 @@ template <typename T, typename U>
 inline void LazySegmentTree<T, U>::Execute(ull loc) {
 	if (ActIsNull[loc])
 		return;
-	Val[loc] = func(Act[loc], (Val[loc]));
+	Val[loc] = func(Actions[loc], (Val[loc]));
 	Propagate(loc);
 }
 
@@ -326,14 +327,14 @@ inline T LazySegmentTree<T, U>::Eval(ull start, ull end) {
 }
 
 template <typename T, typename U>
-inline void LazySegmentTree<T, U>::Action(U action, ull start, ull end) {
+inline void LazySegmentTree<T, U>::Act(U action, ull start, ull end) {
 	GetRange(start, end);
 	while (TargetRange.Size > 0) {
 		ull loc = TargetRange.Pop();
 		if (ActIsNull[loc]) {
-			Act[loc] = action;
+			Actions[loc] = action;
 		} else {
-			Act[loc] = convolute(action, Act[loc]);
+			Actions[loc] = convolute(action, Actions[loc]);
 		}
 		ActIsNull[loc] = false;
 	}

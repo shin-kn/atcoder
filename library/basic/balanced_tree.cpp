@@ -37,9 +37,9 @@ public:
 	AVLTree(
 	  TypeVar<T>,
 	  TypeVar<U>,
-	  LessFunc& less = LTOp<T>,
-	  BeforeChangeFunc& before_change = DoNothingFunc<void, Node*>,
-	  AfterChangeFunc& after_change = DoNothingFunc<void, Node*>,
+	  const LessFunc& less = LTOp<T>,
+	  const BeforeChangeFunc& before_change = DoNothingFunc<void, Node*>,
+	  const AfterChangeFunc& after_change = DoNothingFunc<void, Node*>,
 	  bool WithExtension = false
 	)
 	    : less(less), before_change(before_change), after_change(after_change),
@@ -66,7 +66,7 @@ public:
 		return Data();
 	}
 
-	Pair<T, U&> operator[](ull ind); // equally, Nth
+	Pair<T, U&> Nth(ull ind);
 
 	::LightArray<T> IndexArray();
 	::LightArray<U> DataArray();
@@ -102,8 +102,8 @@ public:
 
 	Stack<Node*> AvailNodes;
 	Node* Root = nullptr;
-	Node* Current;
-	ull CurrentNumber;
+	Node* Current = nullptr;
+	ull CurrentNumber = 0;
 
 	void DFS(FunctionType<void(Node*)>, FunctionType<bool(Node*)>);
 	// by the order of DFS, execute func for Node*
@@ -135,26 +135,28 @@ template <
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
 Pair<T, U&>
-AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::operator[](
-  ull index
-) {
+AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Nth(ull index) {
 	assert(index < Size);
-	Node* loc = Root;
-	ull counter = 0;
+	Current = Root;
+	CurrentNumber = 0;
+	FindRoutes.Clear();
 	while (true) {
-		ull thisindex = weight(loc->child1) + counter;
-		if (thisindex == index)
-			break;
+		ull thisindex = weight(Current->child1) + CurrentNumber;
 		if (thisindex < index) {
-			counter += weight(loc->child1) + 1;
-			loc = loc->child2;
+			FindRoutes.Push(Pair<Node*, bool>(Current, false));
+			CurrentNumber += weight(Current->child1) + 1;
+			Current = Current->child2;
 			continue;
 		}
-		loc = loc->child1;
+		if (index < thisindex) {
+			FindRoutes.Push(Pair<Node*, bool>(Current, true));
+			Current = Current->child1;
+			continue;
+		}
+		CurrentNumber += weight(Current->child1);
+		break;
 	}
-	Current = loc;
-	CurrentNumber = index;
-	return Pair<T, U&>(loc->index, loc->val);
+	return Pair<T, U&>(Current->index, Current->val);
 }
 
 template <

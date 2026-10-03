@@ -32,12 +32,15 @@ static_assert(same::value == true, "size_t == uint64_t");
 
 constexpr ull NiceP = 998244353;
 // NMod,mod,nmod
+constexpr bool DEBUG = false;
 
 constexpr ull SomeBigSize = 1024 * 1024 * 1;
 
 constexpr ull NMOD_COMB_CACHE_N = 1024;
 
-constexpr ull FOURIER_NO_DFS = 256;
+constexpr ull FOURIER_NO_DFS = 1024;
+
+constexpr bool PrintWithEndl = DEBUG;
 
 template <typename T> constexpr T PI = std::numbers::pi_v<T>;
 

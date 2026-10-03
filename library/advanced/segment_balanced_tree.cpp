@@ -29,20 +29,26 @@ public:
 	  TypeVar<T>,
 	  TypeVar<U>,
 	  TypeVar<V>,
-	  AddOp& add,
-	  FuncOp& func,
-	  ConvoluteOp& convolute,
-	  PropagateOp& propagate,
-	  ExecuteOp& execute,
-	  RefreshOp& refresh,
-	  BeforeChangeOp& before_change,
-	  AfterChangeOp& afterchange
+	  const AddOp& add,
+	  const FuncOp& func,
+	  const ConvoluteOp& convolute,
+	  const PropagateOp& propagate,
+	  const ExecuteOp& execute,
+	  const RefreshOp& refresh,
+	  const BeforeChangeOp& before_change,
+	  const AfterChangeOp& afterchange
 	);
 
 	template <typename AddFunc, typename Func, typename ConvoluteFunc>
 	void Init(AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc);
 
 	T Index() { return avltree.Index(); }
+
+	// index and value of the ind-th element in index order
+	Pair<T, U&> Nth(ull ind) {
+		auto cell = avltree.Nth(ind);
+		return Pair<T, U&>(cell.val1, cell.val2.val);
+	}
 
 	void Push(T, U);
 	bool Find(T);
@@ -51,7 +57,7 @@ public:
 	void Delete();
 
 	U Eval(T, T);
-	void Action(V, T, T);
+	void Act(V, T, T);
 
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;
 
@@ -108,14 +114,14 @@ LazySegmentAVLTreeClass<
     TypeVar<T>,
     TypeVar<U>,
     TypeVar<V>,
-    AddOp& add,
-    FuncOp& func,
-    ConvoluteOp& convolute,
-    PropagateOp& propagate,
-    ExecuteOp& execute,
-    RefreshOp& refresh,
-    BeforeChangeOp& before_change,
-    AfterChangeOp& after_change
+    const AddOp& add,
+    const FuncOp& func,
+    const ConvoluteOp& convolute,
+    const PropagateOp& propagate,
+    const ExecuteOp& execute,
+    const RefreshOp& refresh,
+    const BeforeChangeOp& before_change,
+    const AfterChangeOp& after_change
   )
     : add(add), func(func), convolute(convolute), propagate(propagate),
       execute(execute), refresh(refresh), before_change(before_change),
@@ -232,7 +238,7 @@ inline void LazySegmentAVLTreeClass<
   ExecuteOp,
   RefreshOp,
   BeforeChangeOp,
-  AfterChangeOp>::Action(V action, T start, T end) {
+  AfterChangeOp>::Act(V action, T start, T end) {
 	if (avltree.Root == nullptr)
 		return;
 	auto dfs = [&](auto&& self, Node* node) -> void {
@@ -415,9 +421,9 @@ auto LazySegmentAVLTree(
   TypeVar<T>,
   TypeVar<U>,
   TypeVar<V>,
-  AddOp& add,
-  FuncOp& func,
-  ConvoluteOp& convolute
+  const AddOp& add,
+  const FuncOp& func,
+  const ConvoluteOp& convolute
 ) {
 
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;

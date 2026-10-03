@@ -36,15 +36,6 @@ public:
 	  FunctionType<bool(ull)> cango,
 	  FunctionType<void(ull)> firstreach
 	);
-	// cango is about path, others are about node
-
-	template <bool Forward = true, typename func1, typename func2, typename func3>
-	void DFS(ull start, func1&& backfunc, func2&& cango, func3&& firstreach) {
-		DFS<Forward>(
-		  start, std::forward<func1>(backfunc), std::forward<func2>(cango),
-		  std::forward<func3>(firstreach)
-		);
-	}
 
 	template <typename T2, typename U2> Array<ull> SCC(Graph<T2, U2>&);
 
@@ -55,8 +46,8 @@ public:
 };
 
 template <typename T, typename U> void Graph<T, U>::Clear() {
-	Nodes = Array<Node>();
-	Edges = Array<Edge>();
+	Nodes = Array<Node, true>();
+	Edges = Array<Edge, true>();
 }
 
 template <typename T, typename U> void Graph<T, U>::Connect(ull from, ull to) {
@@ -194,7 +185,7 @@ Array<ull> Graph<T, U>::SCC(Graph<T2, U2>& newgraph) {
 
 template <typename T, typename U> Tree<T> Graph<T, U>::GenerateTree(ull root) {
 	Tree<T> tree(root);
-	Array<bool> reached(Nodes.Length, false);
+	LightArray<bool> reached(Nodes.Length, false);
 	auto backfunc = [&](ull) { return; };
 	auto cango = [&](ull path) -> bool {
 		if (reached[Edges[path].To])

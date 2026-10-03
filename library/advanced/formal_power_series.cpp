@@ -58,7 +58,6 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 	size_t deg = Min(f1.Degree + f2.Degree, max_deg);
 	size_t length = BiggerPower2(deg * 2 + 1);
-	size_t loglength = Log2(length);
 
 	if (P == 998244353 && length <= (size_t)1 << 23) {
 		// length = Max(length, (size_t)4); // degree>=2
@@ -66,9 +65,9 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 		LightArray<Mod<P>> arr_1, arr_2;
 
-		fourier_transform_inverse_entry<(ull)0, (ull)23, P, LightArray<Mod<P>>>(
+		fourier_transform_inverse<P, LightArray<Mod<P>>>(
 		  f1.arr, f2.arr, arr_1, arr_2, Min(f1.Degree + 1, deg + 1),
-		  Min(f2.Degree + 1, deg + 1), loglength
+		  Min(f2.Degree + 1, deg + 1), length
 		);
 		LightArray<Mod<P>> arr_3(length);
 		Mod<P> coef = Mod<P>(1) / Mod<P>(length);
@@ -78,9 +77,7 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 		FPS<P> res(deg);
 		LightArray<Mod<P>> res_raw =
-		  fourier_transform_forward_entry<(ull)0, (ull)23, P, LightArray<Mod<P>>>(
-		    arr_3, length, loglength
-		  );
+		  fourier_transform_forward<P, LightArray<Mod<P>>>(arr_3, length, length);
 		for (ull i = 0; i <= deg; ++i)
 			res.arr[i] = res_raw[i];
 		return res;

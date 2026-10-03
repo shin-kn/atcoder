@@ -1,6 +1,8 @@
 #pragma once
 #include "array.cpp"
 #include "base.cpp"
+#include "function_type.cpp"
+#include "template_functions.cpp"
 #include "utils.cpp"
 
 template <typename T, typename U, bool Smaller = true> class Heap {
@@ -174,19 +176,25 @@ inline T SimpleHeap<T, Smaller>::Pop() { // log N
 	return poped;
 }
 
-template <typename T, bool Smaller = true> class FastHeap {
+// top is the smallest element w.r.t. ltop (pass GTOp<T> for a max-heap)
+template <
+  typename T,
+  FunctionConcept<bool, T, T> LTFunc = std::remove_cvref_t<decltype(LTOp<T>)>>
+class FastHeap {
 	T* arr = nullptr;
 	void Slide(size_t from, size_t to);
+	LTFunc ltop;
 
 public:
 	size_t Size = 0;
 	void Push(T);
-	FastHeap() {}
-	FastHeap(size_t n) { Allocate(n); }
+	FastHeap(ull n, const LTFunc& ltop = LTOp<T>) : ltop(ltop) { Allocate(n); }
 	void Allocate(size_t n) {
 		n = BiggerPower2(n);
 		arr = new T[n];
 	}
+	FastHeap(FastHeap& src) = delete;
+	FastHeap& operator=(FastHeap& src) = delete;
 	~FastHeap() {
 		if (arr != nullptr) {
 			delete[] arr;
@@ -196,45 +204,36 @@ public:
 	T Top();
 };
 
-template <typename T, bool Smaller>
-inline void FastHeap<T, Smaller>::Slide(size_t from, size_t to) {
-	arr[to] = arr[from];
+template <typename T, FunctionConcept<bool, T, T> LTFunc>
+inline void FastHeap<T, LTFunc>::Slide(size_t from, size_t to) {
+	arr[to] = std::move(arr[from]);
 }
 
-template <typename T, bool Smaller>
-inline void FastHeap<T, Smaller>::Push(T n1) { // log N
+template <typename T, FunctionConcept<bool, T, T> LTFunc>
+inline void FastHeap<T, LTFunc>::Push(T n1) { // log N
 	size_t loc = this->Size;
 	while (loc != 0) {
-		if constexpr (Smaller) {
-			if (arr[Parent(loc)] > n1) {
-				Slide(Parent(loc), loc);
-				loc = Parent(loc);
-			} else {
-				break;
-			}
+		if (ltop(n1, arr[Parent(loc)])) {
+			Slide(Parent(loc), loc);
+			loc = Parent(loc);
 		} else {
-			if (arr[Parent(loc)] < n1) {
-				Slide(Parent(loc), loc);
-				loc = Parent(loc);
-			} else {
-				break;
-			}
+			break;
 		}
 	}
-	arr[loc] = n1;
+	arr[loc] = std::move(n1);
 	++this->Size;
 }
 
-template <typename T, bool Smaller>
-inline T FastHeap<T, Smaller>::Top() { // log N
+template <typename T, FunctionConcept<bool, T, T> LTFunc>
+inline T FastHeap<T, LTFunc>::Top() { // log N
 	return arr[0];
 }
 
-template <typename T, bool Smaller>
-inline T FastHeap<T, Smaller>::Pop() { // log N
+template <typename T, FunctionConcept<bool, T, T> LTFunc>
+inline T FastHeap<T, LTFunc>::Pop() { // log N
 	if (Size == 0)
 		return T();
-	T poped = arr[0];
+	T poped = std::move(arr[0]);
 	--Size;
 	if (Size == 0)
 		return poped;
@@ -242,22 +241,12 @@ inline T FastHeap<T, Smaller>::Pop() { // log N
 	while (true) {
 		size_t bestloc = Size;
 		if (Child(loc) < Size) {
-			if constexpr (Smaller) {
-				if (arr[Child(loc)] < arr[bestloc])
-					bestloc = Child(loc);
-			} else {
-				if (arr[Child(loc)] > arr[bestloc])
-					bestloc = Child(loc);
-			}
+			if (ltop(arr[Child(loc)], arr[bestloc]))
+				bestloc = Child(loc);
 		}
 		if (Child(loc) + 1 < Size) {
-			if constexpr (Smaller) {
-				if (arr[Child(loc) + 1] < arr[bestloc])
-					bestloc = Child(loc) + 1;
-			} else {
-				if (arr[Child(loc) + 1] > arr[bestloc])
-					bestloc = Child(loc) + 1;
-			}
+			if (ltop(arr[Child(loc) + 1], arr[bestloc]))
+				bestloc = Child(loc) + 1;
 		}
 		if (bestloc == Size) {
 			Slide(Size, loc);

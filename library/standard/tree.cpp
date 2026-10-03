@@ -15,9 +15,9 @@ public:
 		Array<ull> childs;
 		ull parent = 0;
 		T toparent;
-		Array<ull> parents; // by 2^n
-		Array<T> toparents; // by 2^n
-		ull depth = 0;      // root is 0
+		LightArray<ull> parents; // by 2^n
+		LightArray<T> toparents; // by 2^n
+		ull depth = 0;           // root is 0
 	};
 
 	void DFS(
@@ -26,6 +26,8 @@ public:
 	  FunctionType<bool(ull, ull)> cango,
 	  FunctionType<void(ull)> firstreach
 	);
+
+	LightArray<ull> EulerTour(ull start);
 
 	template <typename func1, typename func2, typename func3>
 	void DFS(ull start, func1&& backfunc, func2&& cango, func3&& firstreach) {
@@ -45,6 +47,9 @@ public:
 	bool canLCA = false;
 	void Memo();
 	ull JumpParent(ull, ull); // calld on assumption that canLCA=true
+	ull JumpParentWithDeg(
+	  ull, ull
+	);                        // jump 2^deg; calld on assumption that canLCA=true
 	T JumpToParent(ull, ull); // calld on assumption that canLCA=true
 	                          // assume that T() works like 0
 };
@@ -55,6 +60,20 @@ template <typename T> void Tree<T>::Connect(ull parent, ull child, T val) {
 	Nodes(child).toparent = val;
 }
 
+template <typename T> LightArray<ull> Tree<T>::EulerTour(ull start) {
+	// each node is pushed twice (enter and leave), so 2*Nodes.Length is enough
+	LightArray<ull> tour(2 * Nodes.Length);
+	ull length = 0;
+	auto push_tour = [&](ull n) {
+		tour[length] = n;
+		++length;
+	};
+	auto cango = [](ull, ull) -> bool { return true; };
+	DFS(start, push_tour, cango, push_tour);
+	tour.Length = length;
+	return tour;
+}
+
 template <typename T>
 void Tree<T>::DFS(
   ull start,
@@ -62,8 +81,9 @@ void Tree<T>::DFS(
   FunctionType<bool(ull, ull)> cango,
   FunctionType<void(ull)> firstreach
 ) {
-	Array<ull, true> loc;
-	Array<ull, true> num;
+	// stack depth <= number of nodes, since a tree path never repeats a node
+	LightArray<ull> loc(Nodes.Length + 1);
+	LightArray<ull> num(Nodes.Length + 1);
 	ull place = 0;
 	loc(0) = start;
 	num(0) = 0;
@@ -106,8 +126,8 @@ template <typename T> ull Tree<T>::LCA(ull node1, ull node2) {
 	for (ull deg = degmax;; --deg) {
 		if (Nodes[node1].depth < (1ull << deg))
 			continue;
-		ull newnode1 = JumpParent(node1, (1ull << deg));
-		ull newnode2 = JumpParent(node2, (1ull << deg));
+		ull newnode1 = JumpParentWithDeg(node1, deg);
+		ull newnode2 = JumpParentWithDeg(node2, deg);
 		if (newnode1 == newnode2) {
 			succeed = newnode1;
 		} else {
@@ -133,14 +153,22 @@ template <typename T> void Tree<T>::Memo() {
 	if (canLCA)
 		return;
 	canLCA = true;
-	Array<ull> stack;
+	// non-root nodes; filtered in place as degree grows
+	LightArray<ull> stack(Nodes.Length);
+	ull stack_len = 0;
 	{
 		auto firstreach = [&](ull node) {};
 		auto cango = [&](ull from, ull to) -> bool {
-			stack.Push(to);
-			Nodes[to].depth = Nodes[from].depth + 1;
-			Nodes[to].parents.Push(Nodes[to].parent);
-			Nodes[to].toparents.Push(Nodes[to].toparent);
+			stack[stack_len] = to;
+			++stack_len;
+			Node& node = Nodes[to];
+			node.depth = Nodes[from].depth + 1;
+			// parents[deg] exists iff 2^deg <= depth
+			ull levels = Log2(SmallerPower2(node.depth)) + 1;
+			node.parents.Allocate(levels);
+			node.toparents.Allocate(levels);
+			node.parents[0] = node.parent;
+			node.toparents[0] = node.toparent;
 			return true;
 		};
 		auto backfunc = [&](ull) {};
@@ -148,25 +176,24 @@ template <typename T> void Tree<T>::Memo() {
 	}
 
 	for (ull degree = 1;; ++degree) {
-		Array<ull> newstack;
 		ull deglen = (1ull << degree);
-		for (ull i = 0; i < stack.Length; ++i) {
+		ull new_len = 0;
+		for (ull i = 0; i < stack_len; ++i) {
 			Node& locnode = Nodes[stack[i]];
 			if (deglen > locnode.depth) {
 				continue;
 			}
-			newstack.Push(stack[i]);
-			locnode.parents.Push(
-			  Nodes[locnode.parents[degree - 1]].parents[degree - 1]
-			);
-			locnode.toparents.Push(
+			stack[new_len] = stack[i];
+			++new_len;
+			locnode.parents[degree] =
+			  Nodes[locnode.parents[degree - 1]].parents[degree - 1];
+			locnode.toparents[degree] =
 			  locnode.toparents[degree - 1] +
-			  Nodes[locnode.parents[degree - 1]].toparents[degree - 1]
-			);
+			  Nodes[locnode.parents[degree - 1]].toparents[degree - 1];
 		}
-		if (newstack.Length == 0)
+		if (new_len == 0)
 			break;
-		stack = std::move(newstack);
+		stack_len = new_len;
 	}
 }
 
@@ -180,6 +207,11 @@ template <typename T> ull Tree<T>::JumpParent(ull node, ull jump) {
 		}
 	}
 	return node;
+}
+
+template <typename T> ull Tree<T>::JumpParentWithDeg(ull node, ull deg) {
+	// assume depth of node >= 2^deg
+	return Nodes[node].parents[deg];
 }
 
 template <typename T> T Tree<T>::JumpToParent(ull node, ull jump) {

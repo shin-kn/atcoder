@@ -23,7 +23,7 @@ public:
 
 	T& operator[](size_t idx) { return Val[idx]; }
 
-	Tuple operator+(Tuple other)
+	Tuple operator+(const Tuple& other)
 	  requires requires(T a, T b) { a + b; }
 	{
 		Tuple res;
@@ -31,6 +31,23 @@ public:
 			res.Val[i] = Val[i] + other.Val[i];
 		}
 		return res;
+	}
+	Tuple operator-(const Tuple& other)
+	  requires requires(T a, T b) { a + b; }
+	{
+		Tuple res;
+		for (size_t i = 0; i < N; ++i) {
+			res.Val[i] = Val[i] - other.Val[i];
+		}
+		return res;
+	}
+	Tuple& operator+=(const Tuple& other)
+	  requires requires(T a, T b) { a + b; }
+	{
+		for (ull i = 0; i < N; ++i) {
+			Val[i] += other.Val[i];
+		}
+		return *this;
 	}
 
 	bool operator<(Tuple<T, N> other) {
