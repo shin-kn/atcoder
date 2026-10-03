@@ -293,3 +293,6 @@ __marimo__/
 # atcoder like
 test.txt
 solve.cpp
+
+# Claude Code
+.claude/
