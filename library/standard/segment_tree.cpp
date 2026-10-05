@@ -5,13 +5,9 @@
 // AddFunc: (T, T) -> T, or ((val, block length), (val, block length)) -> T
 template <typename T, typename AddFunc> class SegmentTree {
 	static_assert(
-	  FunctionConcept<AddFunc, T, T, T> ||
+	  FunctionConcept<AddFunc, T, T, T> ^
 	  FunctionConcept<AddFunc, T, Pair<T, ull>, Pair<T, ull>>
 	);
-	static_assert(!(
-	  FunctionConcept<AddFunc, T, T, T> &&
-	  FunctionConcept<AddFunc, T, Pair<T, ull>, Pair<T, ull>>
-	));
 
 public:
 	// init_val is non-deduced so a literal like 0 doesn't fight Type<T> in CTAD
@@ -168,19 +164,12 @@ class LazySegmentTree {
 	static_assert(std::is_copy_assignable<T>::value);
 	static_assert(std::is_copy_assignable<U>::value);
 	static_assert(
-	  FunctionConcept<AddFunc, T, T, T> ||
+	  FunctionConcept<AddFunc, T, T, T> ^
 	  FunctionConcept<AddFunc, T, Pair<T, ull>, Pair<T, ull>>
 	);
-	static_assert(!(
-	  FunctionConcept<AddFunc, T, T, T> &&
-	  FunctionConcept<AddFunc, T, Pair<T, ull>, Pair<T, ull>>
-	));
 	static_assert(
-	  FunctionConcept<Func, T, U, T> || FunctionConcept<Func, T, U, Pair<T, ull>>
+	  FunctionConcept<Func, T, U, T> ^ FunctionConcept<Func, T, U, Pair<T, ull>>
 	);
-	static_assert(!(
-	  FunctionConcept<Func, T, U, T> && FunctionConcept<Func, T, U, Pair<T, ull>>
-	));
 
 public:
 	LazySegmentTree(
@@ -197,6 +186,23 @@ public:
 	}
 
 	T Eval(ull, ull); // evaluate [a,b]
+	template <typename Bounder>
+	  requires(
+	    FunctionConcept<Bounder, bool, T> !=
+	    FunctionConcept<Bounder, bool, T, ull>
+	  )
+	ull EvalSup(ull, ull, const Bounder&);
+	// this is almost equal to Sup(start,end,[&](ull n)->bool{return
+	// bounder(segtree.Eval(start,n));}) but computational complexity is O(log N)
+	template <typename Bounder>
+	  requires(
+	    FunctionConcept<Bounder, bool, T> !=
+	    FunctionConcept<Bounder, bool, T, ull>
+	  )
+	ull EvalInf(ull, ull, const Bounder&);
+	// mirror of EvalSup: almost equal to Inf(start,end,[&](ull n)->bool{return
+	// bounder(segtree.Eval(n,end));}) returns end+1 if even n=end fails
+
 	void Act(U, ull, ull);
 	void Set(ull, T);
 
@@ -223,7 +229,7 @@ private:
 	void Propagate(ull);
 	void Execute(ull);
 	void Refresh(ull);
-	template <FunctionConcept<void, ull> OnTarget>
+	template <bool Update, FunctionConcept<void, ull> OnTarget>
 	void RangeDFS(ull loc, ull start, ull end, const OnTarget& on_target);
 };
 
@@ -359,32 +365,43 @@ LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Refresh(ull loc) {
 }
 
 // visits the cells covering [start, end] left to right, calling on_target(loc)
-// on each; cells outside the range are executed, and partial cells are
-// propagated before and refreshed after their children
-// on_target must call Execute(loc): the parent's Refresh reads Val[loc], and
-// loc's pending action (just propagated down) isn't applied to it otherwise
+// on each.
+// Update = true (on_target changes cells): cells outside the range are
+// executed, and partial cells are propagated before and refreshed after their
+// children, since only part of them changes.
+// Update = false (read only): partial cells are executed, which applies their
+// action to Val directly, so no refresh is needed and cells outside the range
+// are left alone. Relies on func(a, add(x, y)) == add(func(a, x), func(a, y)).
+// on_target must call Execute(loc): Val[loc] doesn't include loc's pending
+// action (just pushed down) until then, and the parent's Refresh reads it
 template <
   typename T,
   typename U,
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-template <FunctionConcept<void, ull> OnTarget>
+template <bool Update, FunctionConcept<void, ull> OnTarget>
 void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::RangeDFS(
   ull loc, ull start, ull end, const OnTarget& on_target
 ) {
 	if (CellEnd[loc] < start || end < CellStart[loc]) {
-		Execute(loc);
+		if constexpr (Update)
+			Execute(loc);
 		return;
 	}
 	if (start <= CellStart[loc] && end >= CellEnd[loc]) {
 		on_target(loc);
 		return;
 	}
-	Propagate(loc);
-	RangeDFS(Child(loc), start, end, on_target);
-	RangeDFS(Child(loc) + 1, start, end, on_target);
-	Refresh(loc);
+	if constexpr (Update) {
+		Propagate(loc);
+	} else {
+		Execute(loc);
+	}
+	RangeDFS<Update>(Child(loc), start, end, on_target);
+	RangeDFS<Update>(Child(loc) + 1, start, end, on_target);
+	if constexpr (Update)
+		Refresh(loc);
 }
 
 template <
@@ -397,7 +414,7 @@ inline T
 LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Eval(ull start, ull end) {
 	ull res_len = 0;
 	T res;
-	RangeDFS(0, start, end, [&](ull loc) {
+	RangeDFS<false>(0, start, end, [&](ull loc) {
 		Execute(loc);
 		if (res_len == 0) {
 			res = Val[loc];
@@ -415,10 +432,123 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
+template <typename Bounder>
+  requires(
+    FunctionConcept<Bounder, bool, T> != FunctionConcept<Bounder, bool, T, ull>
+  )
+ull LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::EvalSup(
+  ull start, ull end, const Bounder& bounder
+) {
+	auto use_bounder = [&](T res, ull n) -> bool {
+		if constexpr (FunctionConcept<Bounder, bool, T>) {
+			return bounder(res);
+		} else {
+			return bounder(res, n);
+		}
+	};
+	T res;
+	ull res_len = 0;
+	ull best = start - 1;
+	auto dfs = [&](auto& self, ull loc) -> bool {
+		if (CellStart[loc] > end)
+			return false; // past the range: stop without descending
+		Execute(loc);
+		if (CellStart[loc] >= start && CellEnd[loc] <= end) {
+			T temp_res;
+			ull temp_res_len;
+			if (res_len == 0) {
+				temp_res = Val[loc];
+				temp_res_len = CellSize(loc);
+			} else {
+				temp_res = Add(res, res_len, Val[loc], CellSize(loc));
+				temp_res_len = res_len + CellSize(loc);
+			}
+
+			if (use_bounder(temp_res, CellEnd[loc])) {
+				res = temp_res;
+				res_len = temp_res_len;
+				best = CellEnd[loc];
+				return true;
+			}
+		}
+		if (Child(loc) >= CellLength)
+			return false;
+		if (CellEnd[Child(loc)] < start || self(self, Child(loc))) {
+			return self(self, Child(loc) + 1);
+		}
+		return false;
+	};
+	dfs(dfs, 0);
+	return best;
+}
+
+template <
+  typename T,
+  typename U,
+  typename AddFunc,
+  typename Func,
+  typename ConvoluteFunc>
+template <typename Bounder>
+  requires(
+    FunctionConcept<Bounder, bool, T> != FunctionConcept<Bounder, bool, T, ull>
+  )
+ull LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::EvalInf(
+  ull start, ull end, const Bounder& bounder
+) {
+	auto use_bounder = [&](T res, ull n) -> bool {
+		if constexpr (FunctionConcept<Bounder, bool, T>) {
+			return bounder(res);
+		} else {
+			return bounder(res, n);
+		}
+	};
+	T res;
+	ull res_len = 0;
+	ull best = end + 1;
+	// scans right to left; each new cell is prepended, so res == Eval(n,end)
+	auto dfs = [&](auto& self, ull loc) -> bool {
+		if (CellEnd[loc] < start)
+			return false; // past the range: stop without descending
+		Execute(loc);
+		if (CellStart[loc] >= start && CellEnd[loc] <= end) {
+			T temp_res;
+			ull temp_res_len;
+			if (res_len == 0) {
+				temp_res = Val[loc];
+				temp_res_len = CellSize(loc);
+			} else {
+				temp_res = Add(Val[loc], CellSize(loc), res, res_len);
+				temp_res_len = res_len + CellSize(loc);
+			}
+
+			if (use_bounder(temp_res, CellStart[loc])) {
+				res = temp_res;
+				res_len = temp_res_len;
+				best = CellStart[loc];
+				return true;
+			}
+		}
+		if (Child(loc) >= CellLength)
+			return false;
+		if (CellStart[Child(loc) + 1] > end || self(self, Child(loc) + 1)) {
+			return self(self, Child(loc));
+		}
+		return false;
+	};
+	dfs(dfs, 0);
+	return best;
+}
+
+template <
+  typename T,
+  typename U,
+  typename AddFunc,
+  typename Func,
+  typename ConvoluteFunc>
 inline void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Act(
   U action, ull start, ull end
 ) {
-	RangeDFS(0, start, end, [&](ull loc) {
+	RangeDFS<true>(0, start, end, [&](ull loc) {
 		if (ActIsNull[loc]) {
 			Actions[loc] = action;
 		} else {
@@ -441,5 +571,5 @@ LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Set(ull loc, T val) {
 		Execute(target);
 		Val[target] = val;
 	};
-	RangeDFS(0, loc, loc, on_target);
+	RangeDFS<true>(0, loc, loc, on_target);
 }

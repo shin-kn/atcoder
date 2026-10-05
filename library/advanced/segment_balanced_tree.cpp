@@ -152,7 +152,7 @@ U LazySegmentAVLTreeClass<
 			return;
 		Cell& cell = node->val;
 		if (cell.ind_max < start || end < cell.ind_min) { // out of range
-			execute(node);
+			// read only: no parent is refreshed, so its pending act can stay
 			return;
 		}
 		if (start <= cell.ind_min && end >= cell.ind_max) { // in the range
@@ -161,13 +161,15 @@ U LazySegmentAVLTreeClass<
 			return;
 		}
 		// else
-		propagate(node);
+		// execute (not just propagate) applies act to sum and val directly, so no
+		// refresh is needed. Relies on func(a, add(x, y)) == add(func(a, x),
+		// func(a, y))
+		execute(node);
 		self(self, node->child1);
 		if (start <= node->index && end >= node->index) {
 			counter = add(counter, cell.val);
 		}
 		self(self, node->child2);
-		refresh(node);
 	};
 	dfs(dfs, avltree.Root);
 	return counter;
