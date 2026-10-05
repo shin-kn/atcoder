@@ -24,7 +24,6 @@ template <
 // T: index, U: value, V:action
 class LazySegmentAVLTreeClass {
 public:
-	LazySegmentAVLTreeClass() {}
 	LazySegmentAVLTreeClass(
 	  TypeVar<T>,
 	  TypeVar<U>,
@@ -38,9 +37,6 @@ public:
 	  const BeforeChangeOp& before_change,
 	  const AfterChangeOp& afterchange
 	);
-
-	template <typename AddFunc, typename Func, typename ConvoluteFunc>
-	void Init(AddFunc&& addfunc, Func&& func, ConvoluteFunc&& convolutefunc);
 
 	T Index() { return avltree.Index(); }
 
@@ -78,12 +74,6 @@ public:
 	AfterChangeOp after_change;
 
 	AVLTree avltree;
-
-	void ExecuteAndRefreshAll();
-
-	Stack<Node*> ToBeExecuted;  //
-	Stack<Node*> ToBeRefreshed; // Nodes
-	Queue<Pair<U*, Node*>> TargetRange;
 };
 
 template <
@@ -129,38 +119,6 @@ LazySegmentAVLTreeClass<
       avltree(
         AVLTree(Type<T>, Type<Cell>, LTOp<T>, before_change, after_change, true)
       ) {}
-
-template <
-  typename T,
-  typename U,
-  typename V,
-  FunctionConcept<U, U, U> AddOp,
-  FunctionConcept<U, V, U> FuncOp,
-  FunctionConcept<V, V, V> ConvoluteOp,
-  typename PropagateOp,
-  typename ExecuteOp,
-  typename RefreshOp,
-  typename BeforeChangeOp,
-  typename AfterChangeOp>
-void LazySegmentAVLTreeClass<
-  T,
-  U,
-  V,
-  AddOp,
-  FuncOp,
-  ConvoluteOp,
-  PropagateOp,
-  ExecuteOp,
-  RefreshOp,
-  BeforeChangeOp,
-  AfterChangeOp>::ExecuteAndRefreshAll() {
-	while (ToBeExecuted.Size > 0) {
-		execute(ToBeExecuted.Pop());
-	}
-	while (ToBeRefreshed.Size > 0) {
-		refresh(ToBeRefreshed.Pop());
-	}
-}
 
 template <
   typename T,

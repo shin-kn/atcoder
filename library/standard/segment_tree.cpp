@@ -223,6 +223,7 @@ private:
 	Stack<ull> ToBeExecuted;
 	Stack<ull> ToBeRefreshed;
 	Queue<ull> TargetRange;
+	Stack<ull> get_range_stack; // reused by GetRange to avoid reallocating
 
 	void Propagate(ull);
 	void Execute(ull);
@@ -318,10 +319,12 @@ inline void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::GetRange(
 	ToBeRefreshed.Clear();
 	TargetRange.Clear();
 
-	Queue<size_t> queue;
-	queue.Push(0);
-	while (queue.Size > 0) {
-		size_t loc = queue.Pop();
+	// DFS pushes each cell before its descendants, so popping ToBeRefreshed
+	// refreshes children before parents
+	get_range_stack.Clear();
+	get_range_stack.Push(0);
+	while (get_range_stack.Size > 0) {
+		ull loc = get_range_stack.Pop();
 		if (CellEnd[loc] < start || end < CellStart[loc]) {
 			ToBeExecuted.Push(loc);
 			continue;
@@ -329,28 +332,14 @@ inline void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::GetRange(
 
 		if (start <= CellStart[loc] && end >= CellEnd[loc]) {
 			ToBeExecuted.Push(loc);
+			TargetRange.Push(loc);
 			continue;
 		}
 		Propagate(loc);
 		ToBeRefreshed.Push(loc);
-		queue.Push(Child(loc));
-		queue.Push(Child(loc) + 1);
-	}
-	Stack<ull> stack;
-	stack.Push(0);
-	while (stack.Size > 0) {
-		ull loc = stack.Pop();
-		if (CellEnd[loc] < start || end < CellStart[loc]) {
-			continue;
-		}
-
-		if (start <= CellStart[loc] && end >= CellEnd[loc]) {
-			TargetRange.Push(loc);
-			continue;
-		}
 		// right first, so the left child pops first and TargetRange is in order
-		stack.Push(Child(loc) + 1);
-		stack.Push(Child(loc));
+		get_range_stack.Push(Child(loc) + 1);
+		get_range_stack.Push(Child(loc));
 	}
 }
 
