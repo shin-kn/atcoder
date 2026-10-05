@@ -219,16 +219,12 @@ private:
 	T Add(T val1, ull len1, T val2, ull len2);
 	T Apply(U action, ull loc);
 	ull CellSize(ull loc) { return CellEnd[loc] - CellStart[loc] + 1; }
-	void GetRange(ull, ull);
-	Stack<ull> ToBeExecuted;
-	Stack<ull> ToBeRefreshed;
-	Queue<ull> TargetRange;
-	Stack<ull> get_range_stack; // reused by GetRange to avoid reallocating
 
 	void Propagate(ull);
 	void Execute(ull);
 	void Refresh(ull);
-	void ExecuteAndRefreshAll(); // Of ToBeExecuted and ToBeRefreshed
+	template <FunctionConcept<void, ull> OnTarget>
+	void RangeDFS(ull loc, ull start, ull end, const OnTarget& on_target);
 };
 
 template <
@@ -312,43 +308,6 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-inline void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::GetRange(
-  ull start, ull end
-) {
-	ToBeExecuted.Clear();
-	ToBeRefreshed.Clear();
-	TargetRange.Clear();
-
-	// DFS pushes each cell before its descendants, so popping ToBeRefreshed
-	// refreshes children before parents
-	get_range_stack.Clear();
-	get_range_stack.Push(0);
-	while (get_range_stack.Size > 0) {
-		ull loc = get_range_stack.Pop();
-		if (CellEnd[loc] < start || end < CellStart[loc]) {
-			ToBeExecuted.Push(loc);
-			continue;
-		}
-
-		if (start <= CellStart[loc] && end >= CellEnd[loc]) {
-			ToBeExecuted.Push(loc);
-			TargetRange.Push(loc);
-			continue;
-		}
-		Propagate(loc);
-		ToBeRefreshed.Push(loc);
-		// right first, so the left child pops first and TargetRange is in order
-		get_range_stack.Push(Child(loc) + 1);
-		get_range_stack.Push(Child(loc));
-	}
-}
-
-template <
-  typename T,
-  typename U,
-  typename AddFunc,
-  typename Func,
-  typename ConvoluteFunc>
 inline void
 LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Propagate(ull loc) {
 	if (ActIsNull[loc])
@@ -399,20 +358,33 @@ LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Refresh(ull loc) {
 	Val[loc] = Add(Val[Child(loc)], child_len, Val[Child(loc) + 1], child_len);
 }
 
+// visits the cells covering [start, end] left to right, calling on_target(loc)
+// on each; cells outside the range are executed, and partial cells are
+// propagated before and refreshed after their children
+// on_target must call Execute(loc): the parent's Refresh reads Val[loc], and
+// loc's pending action (just propagated down) isn't applied to it otherwise
 template <
   typename T,
   typename U,
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-inline void
-LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::ExecuteAndRefreshAll() {
-	while (ToBeExecuted.Size > 0) {
-		Execute(ToBeExecuted.Pop());
+template <FunctionConcept<void, ull> OnTarget>
+void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::RangeDFS(
+  ull loc, ull start, ull end, const OnTarget& on_target
+) {
+	if (CellEnd[loc] < start || end < CellStart[loc]) {
+		Execute(loc);
+		return;
 	}
-	while (ToBeRefreshed.Size > 0) {
-		Refresh(ToBeRefreshed.Pop());
+	if (start <= CellStart[loc] && end >= CellEnd[loc]) {
+		on_target(loc);
+		return;
 	}
+	Propagate(loc);
+	RangeDFS(Child(loc), start, end, on_target);
+	RangeDFS(Child(loc) + 1, start, end, on_target);
+	Refresh(loc);
 }
 
 template <
@@ -423,17 +395,18 @@ template <
   typename ConvoluteFunc>
 inline T
 LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Eval(ull start, ull end) {
-	GetRange(start, end);
-	ExecuteAndRefreshAll();
-	ull first = TargetRange.Pop();
-	T counter = Val[first];
-	ull counter_len = CellSize(first);
-	while (TargetRange.Size > 0) {
-		ull loc = TargetRange.Pop();
-		counter = Add(counter, counter_len, Val[loc], CellSize(loc));
-		counter_len += CellSize(loc);
-	}
-	return counter;
+	ull res_len = 0;
+	T res;
+	RangeDFS(0, start, end, [&](ull loc) {
+		Execute(loc);
+		if (res_len == 0) {
+			res = Val[loc];
+		} else {
+			res = Add(res, res_len, Val[loc], CellSize(loc));
+		}
+		res_len += CellSize(loc);
+	});
+	return res;
 }
 
 template <
@@ -445,17 +418,15 @@ template <
 inline void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Act(
   U action, ull start, ull end
 ) {
-	GetRange(start, end);
-	while (TargetRange.Size > 0) {
-		ull loc = TargetRange.Pop();
+	RangeDFS(0, start, end, [&](ull loc) {
 		if (ActIsNull[loc]) {
 			Actions[loc] = action;
 		} else {
 			Actions[loc] = convolute(action, Actions[loc]);
 		}
 		ActIsNull[loc] = false;
-	}
-	ExecuteAndRefreshAll();
+		Execute(loc);
+	});
 }
 
 template <
@@ -466,9 +437,9 @@ template <
   typename ConvoluteFunc>
 inline void
 LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Set(ull loc, T val) {
-	ull loc_cell = Length - 1 + loc;
-	GetRange(loc, loc);
-	Execute(loc_cell);
-	Val[loc_cell] = val;
-	ExecuteAndRefreshAll();
+	auto on_target = [&](ull target) {
+		Execute(target);
+		Val[target] = val;
+	};
+	RangeDFS(0, loc, loc, on_target);
 }
