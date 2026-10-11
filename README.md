@@ -4,12 +4,12 @@ library for atcoder
 ## purpose
 This library tries to
 - use C++ like Python
-- do not depend on the standard library
+- not depend on the standard library
 - minimize the length of code the user writes
 
 ## document
 There is no document, since I often change the behavior of the library(!?).
-You should let codex or claude to read the library and get how to use it.
+You should let Codex or Claude read the library and figure out how to use it.
 (I think Array class is so confusing, lol.)
 
 
