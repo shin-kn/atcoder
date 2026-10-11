@@ -6,7 +6,7 @@ template <typename T, size_t N> class Tuple {
 	T Val[N];
 
 public:
-	ull Length = N;
+	constexpr static ull Length = N;
 
 	Tuple() {}
 

@@ -1,5 +1,7 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/stack_queue.cpp"
 
 class UnionFindTree { // E,V
 

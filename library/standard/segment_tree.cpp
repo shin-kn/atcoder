@@ -1,5 +1,11 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/math.cpp"
+#include "../basic/tuple_pair.cpp"
+#include "../basic/utils.cpp"
 
 // T: monoid
 // AddFunc: (T, T) -> T, or ((val, block length), (val, block length)) -> T

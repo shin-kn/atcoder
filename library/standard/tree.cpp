@@ -1,5 +1,10 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/math.cpp"
+#include "../basic/utils.cpp"
 
 template <typename T> class Tree {
 public:

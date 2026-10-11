@@ -13,3 +13,5 @@
 #include "basic/template_functions.cpp"
 #include "basic/tuple_pair.cpp"
 #include "basic/utils.cpp"
+#include "macro.cpp"
+#include "print.cpp"

@@ -1,5 +1,11 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/math.cpp"
+#include "../basic/min_max.cpp"
+#include "../basic/set_dict.cpp"
+#include "./integer.cpp"
 
 size_t Dynamic_Mod_P = 100;
 
@@ -177,9 +183,7 @@ template <size_t P> std::ostream& operator<<(std::ostream& os, Mod<P> val) {
 
 template <ull P> constexpr Mod<P> NthRoot(ull n) {
 	static_assert(P == NiceP);
-	// assert(n <= (ull)1 << 23);
 	ull loglength = Log2(n);
-	// assert((ull)1<<loglength==n);
 	return Power(Mod<P>((ull)15311432), ((size_t)1 << (23 - loglength)));
 }
 

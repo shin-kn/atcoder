@@ -1,5 +1,10 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/min_max.cpp"
+#include "../basic/stack_queue.cpp"
 #include "tree.cpp"
 
 template <typename T = ull, typename U = ull> class Graph {

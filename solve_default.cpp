@@ -1,4 +1,22 @@
+#include "library/basic.cpp"
 
-#include "library/standard.cpp"
+// #include "library/basic/balanced_tree.cpp"
+// #include "library/basic/heap.cpp"
+// #include "library/basic/set_dict.cpp"
+// #include "library/basic/stack_queue.cpp"
+// #include "library/basic/tuple_pair.cpp"
+// #include "library/basic/utils.cpp"
+// #include "library/standard/avl_array.cpp"
+// #include "library/standard/graph.cpp"
+// #include "library/standard/integer.cpp"
+// #include "library/standard/mod.cpp"
+// #include "library/standard/search.cpp"
+// #include "library/standard/segment_tree.cpp"
+// #include "library/standard/tree.cpp"
+// #include "library/standard/union_find_tree.cpp"
+// #include "library/advanced/formal_power_series.cpp"
+// #include "library/advanced/mo_algorithm.cpp"
+// #include "library/advanced/multi_dim_segment_tree.cpp"
+// #include "library/advanced/segment_balanced_tree.cpp"
 
 void solve() {}

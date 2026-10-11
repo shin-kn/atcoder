@@ -1,5 +1,12 @@
 #pragma once
-#include "../standard.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/min_max.cpp"
+#include "../basic/tuple_pair.cpp"
+#include "../standard/integer.cpp"
+#include "../standard/search.cpp"
 
 template <typename ArrayType>
   requires ArrayLike<ArrayType, Tuple<ull, 2>>

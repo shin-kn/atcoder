@@ -1,5 +1,10 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/heap.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/template_functions.cpp"
 
 // Inf,Sup should be
 //  exists v in [val1,val2] that func(v)=true

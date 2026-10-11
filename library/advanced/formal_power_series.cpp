@@ -1,5 +1,11 @@
 #pragma once
-#include "../standard.cpp"
+#include "../basic/base.cpp"
+#include "../basic/heap.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/math.cpp"
+#include "../basic/min_max.cpp"
+#include "../basic/tuple_pair.cpp"
+#include "../standard/mod.cpp"
 
 template <typename T> class FormalPowerSeries;
 
@@ -60,7 +66,6 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 	size_t length = BiggerPower2(deg * 2 + 1);
 
 	if (P == 998244353 && length <= (size_t)1 << 23) {
-		// length = Max(length, (size_t)4); // degree>=2
 		//  NTT
 
 		LightArray<Mod<P>> arr_1, arr_2;
@@ -160,16 +165,3 @@ Mod<P> BostanMori(FPS<P>& p, FPS<P>& q, size_t N) { //[x^N] P(x)/Q(x),
 	}
 	return upper[0] / lower[0];
 }
-
-/* WIP
-template <ull P> FPS<P> Prod(Array<FPS<P>>& arr) {
-
-  AVLTree index(Type<ull>, Type<ull>); // check_next
-  Array<ull> merge_cost;
-  AVLTree avltree(Type<Tuple<ull, 2>>, Type<ull>);
-
-  for (ull i = 0; i < arr.Length; ++i) {
-    index.Push(i, )
-  }
-}
-*/

@@ -86,3 +86,44 @@ template <typename T> inline T Queue<T>::Pop() {
 }
 
 template <typename T> inline T Queue<T>::Top() { return this->Arr[this->loc]; }
+
+// this is implemented temporarily.
+//  needs improvement
+template <typename T> class Deque {
+
+	Array<T> plus_arr;
+	Array<T> minus_arr;
+
+	ll right_loc = 0;
+	ll left_loc = -1;
+	// the used memory is (left,right)
+
+	T& index(ll loc) { return loc >= 0 ? plus_arr[loc] : minus_arr[-loc - 1]; }
+
+public:
+	size_t Size = 0;
+	Deque() {}
+	void PushRight(const T& val) {
+		index(right_loc) = val;
+		++right_loc;
+		++Size;
+	}
+	void PushLeft(const T& val) {
+		index(left_loc) = val;
+		--left_loc;
+		++Size;
+	}
+	T PopRight() {
+		--right_loc;
+		--Size;
+		return index(right_loc);
+	}
+	T PopLeft() {
+		++left_loc;
+		--Size;
+		return index(left_loc);
+	}
+	T& LeftTop() { return index(left_loc + 1); }
+
+	T& RightTop() { return index(right_loc - 1); }
+};

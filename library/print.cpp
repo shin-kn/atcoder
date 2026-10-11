@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "basic.cpp"
+#include "basic/base.cpp"
 
 inline std::ostream& PrintEndl(std::ostream& os) {
 	if constexpr (PrintWithEndl) {

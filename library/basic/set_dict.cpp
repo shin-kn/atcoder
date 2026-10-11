@@ -10,9 +10,9 @@ template <typename T, typename U>
 	  { x == y } -> std::convertible_to<bool>;
   }
 class Dict {
-	AVLTree<T, U> avltree = AVLTree<T, U>(Type<T>, Type<U>);
 
 public:
+	AVLTree<T, U> avltree = AVLTree<T, U>(Type<T>, Type<U>);
 	ull Size = 0;
 	bool search_succeeded = false;
 	T prev_search;

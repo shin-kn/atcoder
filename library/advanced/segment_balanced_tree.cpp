@@ -1,4 +1,9 @@
-#include "../standard.cpp"
+#pragma once
+#include "../basic/balanced_tree.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/template_functions.cpp"
+#include "../basic/tuple_pair.cpp"
 
 template <typename T, typename U, typename V> struct LazySegmentAVLTreeCell {
 	T ind_min;

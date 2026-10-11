@@ -1,5 +1,8 @@
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/base.cpp"
+#include "../basic/tuple_pair.cpp"
+#include "../basic/utils.cpp"
 #include "search.cpp"
 
 template <std::integral T> inline T Sqrt(T num) { // assume num>=0

@@ -1,4 +1,11 @@
-#include "../standard.cpp"
+#pragma once
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/light_array.cpp"
+#include "../basic/math.cpp"
+#include "../basic/stack_queue.cpp"
+#include "../basic/tuple_pair.cpp"
+#include "../basic/utils.cpp"
 
 template <typename T, ull N> class MultiDimSegmentTree {
 	static_assert(std::is_copy_assignable<T>::value);

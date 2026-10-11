@@ -1,6 +1,10 @@
 
 #pragma once
-#include "../basic.cpp"
+#include "../basic/array.cpp"
+#include "../basic/balanced_tree.cpp"
+#include "../basic/base.cpp"
+#include "../basic/function_type.cpp"
+#include "../basic/tuple_pair.cpp"
 
 template <
   typename T,
