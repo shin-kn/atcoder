@@ -1,6 +1,17 @@
 # atcoder
 library for atcoder
-some codes are transplanted from shin-kn/atcoder_old
+
+## purpose
+This library tries to
+- use C++ like Python
+- do not depend on the standard library
+- minimize the length of code the user writes
+
+## document
+There is no document, since I often change the behavior of the library(!?).
+You should let codex or claude to read the library and get how to use it.
+(I think Array class is so confusing, lol.)
+
 
 ## to use
 write some codes in solve.cpp and compile the main.cpp
