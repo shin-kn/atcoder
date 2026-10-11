@@ -32,7 +32,7 @@ static_assert(same::value == true, "size_t == uint64_t");
 
 constexpr ull NiceP = 998244353;
 // NMod,mod,nmod
-constexpr bool DEBUG = true;
+constexpr bool DEBUG = false;
 
 constexpr ull SomeBigSize = 1024 * 1024 * 1;
 
