@@ -98,3 +98,80 @@ public:
 		return arr;
 	}
 };
+
+class Fraction {
+	// reduces n/d with int128_t and stores it as ll
+	void Set(int128_t n, int128_t d);
+
+public:
+	ll num = 0;
+	ll den = 1; // den>0, gcd(num,den)==1
+	Fraction() {}
+	Fraction(ll n) : num(n) {}
+	Fraction(ll n, ll d) { Set(n, d); }
+	bool operator==(const Fraction& other) const {
+		return num == other.num && den == other.den;
+	}
+	bool operator<(const Fraction& other) const {
+		return int128_t(num) * other.den < int128_t(other.num) * den;
+	}
+	bool operator>(const Fraction& other) const { return other < *this; }
+	Fraction operator+(const Fraction& other) const;
+	Fraction operator-(const Fraction& other) const;
+	Fraction operator*(const Fraction& other) const;
+	Fraction Inv() const;
+	Fraction operator/(const Fraction& other) const {
+		return *this * other.Inv();
+	}
+};
+
+inline void Fraction::Set(int128_t n, int128_t d) {
+	assert(d != 0);
+	if (d < 0) {
+		d = -d;
+		n = -n;
+	}
+	int128_t a = n < 0 ? -n : n;
+	int128_t b = d;
+	while (b != 0) {
+		int128_t r = a % b;
+		a = b;
+		b = r;
+	}
+	num = ll(n / a);
+	den = ll(d / a);
+}
+
+inline Fraction Fraction::operator+(const Fraction& other) const {
+	Fraction res;
+	res.Set(
+	  int128_t(num) * other.den + int128_t(other.num) * den,
+	  int128_t(den) * other.den
+	);
+	return res;
+}
+
+inline Fraction Fraction::operator-(const Fraction& other) const {
+	Fraction res;
+	res.Set(
+	  int128_t(num) * other.den - int128_t(other.num) * den,
+	  int128_t(den) * other.den
+	);
+	return res;
+}
+
+inline Fraction Fraction::operator*(const Fraction& other) const {
+	Fraction res;
+	res.Set(int128_t(num) * other.num, int128_t(den) * other.den);
+	return res;
+}
+
+inline Fraction Fraction::Inv() const {
+	assert(num != 0);
+	return Fraction(den, num);
+}
+
+inline std::ostream& operator<<(std::ostream& os, Fraction val) {
+	os << val.num << "/" << val.den;
+	return os;
+}
