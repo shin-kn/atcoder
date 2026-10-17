@@ -35,6 +35,12 @@ public:
 			delete[] arr;
 		}
 	}
+
+	// for iterator
+	T* begin() { return arr; }
+	T* end() { return arr + Length; }
+	const T* begin() const { return arr; }
+	const T* end() const { return arr + Length; }
 };
 
 template <typename T> void LightArray<T>::Set(size_t start, size_t end, T val) {
@@ -78,15 +84,15 @@ std::ostream& operator<<(std::ostream& os, LightArray<T>& arr) {
 	os << "[";
 	for (ull i = 0; i < arr.Length; ++i) {
 		if (i != 0)
-			cout << ", ";
-		cout << arr[i];
+			os << ", ";
+		os << arr[i];
 	}
-	cout << "]";
+	os << "]";
 	return os;
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, LightArray<T>&& arr) {
-	cout << arr;
+	os << arr;
 	return os;
 }

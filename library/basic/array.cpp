@@ -7,7 +7,30 @@
 constexpr ull SMALL_TYPE = 100;
 constexpr ull SMALL_LENGTH = 8;
 
-template <typename T, bool Unsafe = false> class Array {
+template <typename T, bool Unsafe = false> class Array;
+
+template <typename T, bool Unsafe> class ArrayIterator {
+	ull index;
+	Array<T, Unsafe>& arr;
+
+public:
+	ArrayIterator(ull index, Array<T, Unsafe>& arr) : index(index), arr(arr) {}
+
+	T& operator*() { return arr[index]; }
+
+	bool operator==(const ArrayIterator& other) const {
+		return index == other.index;
+	}
+	bool operator!=(const ArrayIterator& other) const {
+		return index != other.index;
+	}
+	ArrayIterator& operator++() {
+		++index;
+		return *this;
+	}
+};
+
+template <typename T, bool Unsafe> class Array {
 	T** arr = nullptr;
 
 	T** pointers = nullptr;
@@ -57,6 +80,14 @@ public:
 	Array& operator=(Array&& src);
 
 	inline void Clear();
+
+	// for iterator
+	ArrayIterator<T, Unsafe> begin() {
+		return ArrayIterator<T, Unsafe>(0, *this);
+	}
+	ArrayIterator<T, Unsafe> end() {
+		return ArrayIterator<T, Unsafe>(Length, *this);
+	}
 };
 
 template <typename T, bool Unsafe>
@@ -221,15 +252,15 @@ std::ostream& operator<<(std::ostream& os, Array<T>& arr) {
 	os << "[";
 	for (ull i = 0; i < arr.Length; ++i) {
 		if (i != 0)
-			cout << ", ";
-		cout << arr[i];
+			os << ", ";
+		os << arr[i];
 	}
-	cout << "]";
+	os << "]";
 	return os;
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, Array<T>&& arr) {
-	cout << arr;
+	os << arr;
 	return os;
 }
