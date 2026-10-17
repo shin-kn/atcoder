@@ -18,8 +18,6 @@ class AVLArrayClass {
 
 public:
 	AVLArrayClass(
-	  TypeVar<T>,
-	  TypeVar<U>,
 	  const IndexLT& index_lt,
 	  const DataLT& data_lt,
 	  const IndexDataLT& index_data_lt
@@ -71,19 +69,12 @@ template <
   FunctionConcept<bool, U, U> DataLT,
   FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::AVLArrayClass(
-  TypeVar<T>,
-  TypeVar<U>,
   const IndexLT& index_lt,
   const DataLT& data_lt,
   const IndexDataLT& index_data_lt
 )
     : index_lt(index_lt), data_lt(data_lt), index_data_lt(index_data_lt),
-      index_tree(AVLTree<T, U, IndexLT>(Type<T>, Type<U>, index_lt)),
-      data_tree(
-        AVLTree<Pair<U, T>, T, IndexDataLT>(
-          Type<Pair<U, T>>, Type<T>, index_data_lt
-        )
-      ) {}
+      index_tree(index_lt), data_tree(index_data_lt) {}
 
 template <
   typename T,
@@ -206,9 +197,7 @@ U& AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::Nth(ull ind) {
 }
 
 template <typename T, typename U, typename IndexLT, typename DataLT>
-auto AVLArray(
-  TypeVar<T> t_type, TypeVar<U> u_type, IndexLT&& index_lt, DataLT&& data_lt
-) {
+auto AVLArray(IndexLT&& index_lt, DataLT&& data_lt) {
 	auto index_data_lt = [=](Pair<U, T> n1, Pair<U, T> n2) -> bool {
 		if (data_lt(n1.val1, n2.val1) || data_lt(n2.val1, n1.val1)) {
 			return data_lt(n1.val1, n2.val1);
@@ -218,8 +207,8 @@ auto AVLArray(
 	AVLArrayClass<
 	  T, U, std::decay_t<IndexLT>, std::decay_t<DataLT>, decltype(index_data_lt)>
 	  avlarray(
-	    t_type, u_type, std::forward<IndexLT>(index_lt),
-	    std::forward<DataLT>(data_lt), index_data_lt
+	    std::forward<IndexLT>(index_lt), std::forward<DataLT>(data_lt),
+	    index_data_lt
 	  );
 	return avlarray;
 }

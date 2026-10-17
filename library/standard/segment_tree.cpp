@@ -9,25 +9,18 @@
 
 // T: monoid
 // AddFunc: (T, T) -> T, or ((val, block length), (val, block length)) -> T
-template <typename T, typename AddFunc> class SegmentTree {
+template <typename T, typename AddFunc> class SegmentTreeClass {
 	static_assert(
 	  FunctionConcept<AddFunc, T, T, T> ^
 	  FunctionConcept<AddFunc, T, Pair<T, ull>, Pair<T, ull>>
 	);
 
 public:
-	// init_val is non-deduced so a literal like 0 doesn't fight Type<T> in CTAD
-	SegmentTree(
-	  TypeVar<T>,
-	  const AddFunc& add,
-	  ull N,
-	  std::type_identity_t<T> init_val = T()
-	)
-	    : add(add) {
+	SegmentTreeClass(const AddFunc& add, ull N, T init_val = T()) : add(add) {
 		Array<T> arr = Array<T>();
 		Init(N, arr, init_val);
 	}
-	SegmentTree(TypeVar<T>, const AddFunc& add, Array<T>& arr) : add(add) {
+	SegmentTreeClass(const AddFunc& add, Array<T>& arr) : add(add) {
 		Init(arr.Length, arr, T());
 	}
 
@@ -54,9 +47,19 @@ public:
 	LightArray<ull> GetRange(size_t start, size_t end);
 };
 
+// SegmentTree<T>(add, N, init_val): T is given, AddFunc is deduced
+template <typename T, typename AddFunc>
+auto SegmentTree(const AddFunc& add, ull N, T init_val = T()) {
+	return SegmentTreeClass<T, AddFunc>(add, N, init_val);
+}
+template <typename T, typename AddFunc>
+auto SegmentTree(const AddFunc& add, Array<T>& arr) {
+	return SegmentTreeClass<T, AddFunc>(add, arr);
+}
+
 // calls add, passing each side's block length if AddFunc takes them
 template <typename T, typename AddFunc>
-T SegmentTree<T, AddFunc>::Add(T val1, ull len1, T val2, ull len2) {
+T SegmentTreeClass<T, AddFunc>::Add(T val1, ull len1, T val2, ull len2) {
 	if constexpr (FunctionConcept<AddFunc, T, T, T>) {
 		return add(val1, val2);
 	} else {
@@ -65,7 +68,7 @@ T SegmentTree<T, AddFunc>::Add(T val1, ull len1, T val2, ull len2) {
 }
 
 template <typename T, typename AddFunc>
-void SegmentTree<T, AddFunc>::Init(ull N, Array<T>& arr, T init_val) {
+void SegmentTreeClass<T, AddFunc>::Init(ull N, Array<T>& arr, T init_val) {
 	Length = BiggerPower2(N);
 	CellLength = Length * 2 - 1;
 	Degree = Log2(Length * 2);
@@ -94,7 +97,7 @@ void SegmentTree<T, AddFunc>::Init(ull N, Array<T>& arr, T init_val) {
 }
 
 template <typename T, typename AddFunc>
-void SegmentTree<T, AddFunc>::Set(ull point, T val) {
+void SegmentTreeClass<T, AddFunc>::Set(ull point, T val) {
 	ull loc = Length + point - 1;
 	Val[loc] = val;
 	if (loc == 0)
@@ -109,7 +112,7 @@ void SegmentTree<T, AddFunc>::Set(ull point, T val) {
 	}
 }
 template <typename T, typename AddFunc>
-T SegmentTree<T, AddFunc>::Eval(size_t start, size_t end) {
+T SegmentTreeClass<T, AddFunc>::Eval(size_t start, size_t end) {
 	LightArray<ull> range = GetRange(start, end);
 	// range is in left-to-right order, so a non-commutative add folds correctly
 	T counter = Val[range[0]];
@@ -123,12 +126,13 @@ T SegmentTree<T, AddFunc>::Eval(size_t start, size_t end) {
 }
 
 template <typename T, typename AddFunc>
-ull SegmentTree<T, AddFunc>::CellIndex(size_t start, size_t logsize) {
+ull SegmentTreeClass<T, AddFunc>::CellIndex(size_t start, size_t logsize) {
 	return ((1 << (Degree - logsize - 1)) - 1) + (start >> logsize);
 }
 
 template <typename T, typename AddFunc>
-LightArray<ull> SegmentTree<T, AddFunc>::GetRange(size_t start, size_t end) {
+LightArray<ull>
+SegmentTreeClass<T, AddFunc>::GetRange(size_t start, size_t end) {
 	// each of the two passes takes at most one cell per level
 	LightArray<ull> res(2 * Degree);
 	ull res_len = 0;
@@ -166,7 +170,7 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-class LazySegmentTree {
+class LazySegmentTreeClass {
 	static_assert(std::is_copy_assignable<T>::value);
 	static_assert(std::is_copy_assignable<U>::value);
 	static_assert(
@@ -178,11 +182,9 @@ class LazySegmentTree {
 	);
 
 public:
-	LazySegmentTree(
-	  TypeVar<T>,
-	  TypeVar<U>,
+	LazySegmentTreeClass(
 	  ull N,
-	  std::type_identity_t<T> init_val,
+	  T init_val,
 	  const AddFunc& add,
 	  const Func& func,
 	  const ConvoluteFunc& convolute
@@ -239,13 +241,32 @@ private:
 	void RangeDFS(ull loc, ull start, ull end, const OnTarget& on_target);
 };
 
+// LazySegmentTree<T, U>(N, init_val, add, func, convolute): functors deduced
 template <
   typename T,
   typename U,
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Init(
+auto LazySegmentTree(
+  ull N,
+  T init_val,
+  const AddFunc& add,
+  const Func& func,
+  const ConvoluteFunc& convolute
+) {
+	return LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>(
+	  N, init_val, add, func, convolute
+	);
+}
+
+template <
+  typename T,
+  typename U,
+  typename AddFunc,
+  typename Func,
+  typename ConvoluteFunc>
+void LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Init(
   ull N, T init_val
 ) {
 	Length = BiggerPower2(N);
@@ -287,7 +308,7 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-T LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Add(
+T LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Add(
   T val1, ull len1, T val2, ull len2
 ) {
 	if constexpr (FunctionConcept<AddFunc, T, T, T>) {
@@ -304,7 +325,7 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-T LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Apply(
+T LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Apply(
   U action, ull loc
 ) {
 	if constexpr (FunctionConcept<Func, T, U, T>) {
@@ -321,7 +342,7 @@ template <
   typename Func,
   typename ConvoluteFunc>
 inline void
-LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Propagate(ull loc) {
+LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Propagate(ull loc) {
 	if (ActIsNull[loc])
 		return;
 	ActIsNull[loc] = true;
@@ -349,7 +370,7 @@ template <
   typename Func,
   typename ConvoluteFunc>
 inline void
-LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Execute(ull loc) {
+LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Execute(ull loc) {
 	if (ActIsNull[loc])
 		return;
 	Val[loc] = Apply(Actions[loc], loc);
@@ -363,7 +384,7 @@ template <
   typename Func,
   typename ConvoluteFunc>
 inline void
-LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Refresh(ull loc) {
+LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Refresh(ull loc) {
 	if (Child(loc) >= CellLength)
 		return;
 	ull child_len = CellSize(Child(loc));
@@ -387,7 +408,7 @@ template <
   typename Func,
   typename ConvoluteFunc>
 template <bool Update, FunctionConcept<void, ull> OnTarget>
-void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::RangeDFS(
+void LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::RangeDFS(
   ull loc, ull start, ull end, const OnTarget& on_target
 ) {
 	if (CellEnd[loc] < start || end < CellStart[loc]) {
@@ -416,8 +437,9 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-inline T
-LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Eval(ull start, ull end) {
+inline T LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Eval(
+  ull start, ull end
+) {
 	ull res_len = 0;
 	T res;
 	RangeDFS<false>(0, start, end, [&](ull loc) {
@@ -442,7 +464,7 @@ template <typename Bounder>
   requires(
     FunctionConcept<Bounder, bool, T> != FunctionConcept<Bounder, bool, T, ull>
   )
-ull LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::EvalSup(
+ull LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::EvalSup(
   ull start, ull end, const Bounder& bounder
 ) {
 	auto use_bounder = [&](T res, ull n) -> bool {
@@ -498,7 +520,7 @@ template <typename Bounder>
   requires(
     FunctionConcept<Bounder, bool, T> != FunctionConcept<Bounder, bool, T, ull>
   )
-ull LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::EvalInf(
+ull LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::EvalInf(
   ull start, ull end, const Bounder& bounder
 ) {
 	auto use_bounder = [&](T res, ull n) -> bool {
@@ -551,7 +573,7 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-inline void LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Act(
+inline void LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Act(
   U action, ull start, ull end
 ) {
 	RangeDFS<true>(0, start, end, [&](ull loc) {
@@ -572,7 +594,7 @@ template <
   typename Func,
   typename ConvoluteFunc>
 inline void
-LazySegmentTree<T, U, AddFunc, Func, ConvoluteFunc>::Set(ull loc, T val) {
+LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Set(ull loc, T val) {
 	auto on_target = [&](ull target) {
 		Execute(target);
 		Val[target] = val;

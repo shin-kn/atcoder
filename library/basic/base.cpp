@@ -61,12 +61,6 @@ concept BiggerDefined = requires(T a, T b) {
 	{ a > b } -> std::convertible_to<bool>;
 };
 
-template <typename T> struct TypeStruct {};
-
-template <typename T> TypeStruct<T> Type;
-
-template <typename T> using TypeVar = TypeStruct<T>&;
-
 template <typename Arr, typename T>
 concept ArrayLike = requires(Arr arr, ull index) {
 	{ arr.Length } -> std::convertible_to<ull>;

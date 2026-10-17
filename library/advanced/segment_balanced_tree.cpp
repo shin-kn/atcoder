@@ -30,9 +30,6 @@ template <
 class LazySegmentAVLTreeClass {
 public:
 	LazySegmentAVLTreeClass(
-	  TypeVar<T>,
-	  TypeVar<U>,
-	  TypeVar<V>,
 	  const AddOp& add,
 	  const FuncOp& func,
 	  const ConvoluteOp& convolute,
@@ -106,9 +103,6 @@ LazySegmentAVLTreeClass<
   BeforeChangeOp,
   AfterChangeOp>::
   LazySegmentAVLTreeClass(
-    TypeVar<T>,
-    TypeVar<U>,
-    TypeVar<V>,
     const AddOp& add,
     const FuncOp& func,
     const ConvoluteOp& convolute,
@@ -121,9 +115,7 @@ LazySegmentAVLTreeClass<
     : add(add), func(func), convolute(convolute), propagate(propagate),
       execute(execute), refresh(refresh), before_change(before_change),
       after_change(after_change),
-      avltree(
-        AVLTree(Type<T>, Type<Cell>, LTOp<T>, before_change, after_change, true)
-      ) {}
+      avltree(AVLTree(LTOp<T>, before_change, after_change, true)) {}
 
 template <
   typename T,
@@ -378,17 +370,16 @@ void LazySegmentAVLTreeClass<
 template <
   typename T,
   typename U,
-  typename V,
+  typename V = bool, // dummy action type when no Act is needed
   FunctionConcept<U, U, U> AddOp,
-  FunctionConcept<U, V, U> FuncOp,
-  FunctionConcept<V, V, V> ConvoluteOp>
+  FunctionConcept<U, V, U> FuncOp =
+    std::remove_cvref_t<decltype(DoNothingFunc<U, V, U>)>,
+  FunctionConcept<V, V, V> ConvoluteOp =
+    std::remove_cvref_t<decltype(DoNothingFunc<V, V, V>)>>
 auto LazySegmentAVLTree(
-  TypeVar<T>,
-  TypeVar<U>,
-  TypeVar<V>,
   const AddOp& add,
-  const FuncOp& func,
-  const ConvoluteOp& convolute
+  const FuncOp& func = DoNothingFunc<U, V, U>,
+  const ConvoluteOp& convolute = DoNothingFunc<V, V, V>
 ) {
 
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;
@@ -461,8 +452,8 @@ auto LazySegmentAVLTree(
 	  T, U, V, AddOp, FuncOp, ConvoluteOp, decltype(propagate), decltype(execute),
 	  decltype(refresh), decltype(before_change), decltype(after_change)>
 	  segtree(
-	    Type<T>, Type<U>, Type<V>, add, func, convolute, propagate, execute,
-	    refresh, before_change, after_change
+	    add, func, convolute, propagate, execute, refresh, before_change,
+	    after_change
 	  );
 	return segtree;
 }

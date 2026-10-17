@@ -35,8 +35,6 @@ class AVLTree {
 public:
 	using Node = AVLTreeNode<T, U>;
 	AVLTree(
-	  TypeVar<T>,
-	  TypeVar<U>,
 	  const LessFunc& less = LTOp<T>,
 	  const BeforeChangeFunc& before_change = DoNothingFunc<void, Node*>,
 	  const AfterChangeFunc& after_change = DoNothingFunc<void, Node*>,

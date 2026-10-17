@@ -12,7 +12,7 @@ template <typename T, typename U>
 class Dict {
 
 public:
-	AVLTree<T, U> avltree = AVLTree<T, U>(Type<T>, Type<U>);
+	AVLTree<T, U> avltree;
 	ull Size = 0;
 	bool search_succeeded = false;
 	T prev_search;
