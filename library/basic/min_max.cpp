@@ -14,6 +14,18 @@ template <typename T> inline T Max(T val1, T val2) {
 	return val2;
 }
 
+template <typename T, typename... Args>
+  requires(sizeof...(Args) > 0)
+inline T Min(T val1, T val2, Args... args) {
+	return Min(val1, Min(val2, args...));
+}
+
+template <typename T, typename... Args>
+  requires(sizeof...(Args) > 0)
+inline T Max(T val1, T val2, Args... args) {
+	return Max(val1, Max(val2, args...));
+}
+
 template <typename T> inline void UpdateMin(T& val1, T val2) {
 	static_assert(std::is_copy_assignable<T>::value);
 	if (val2 < val1)

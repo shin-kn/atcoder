@@ -33,21 +33,14 @@ template <> constexpr inline size_t Log2<size_t>(size_t num) {
 }
 
 template <typename T> constexpr T Power(T val, size_t times) {
-	if (times == 0) {
-		return T((ull)1);
-	}
-
-	T powers[64];
-	size_t maxdeg = Log2(SmallerPower2(times));
-	powers[0] = val;
-	for (size_t i = 1; i <= maxdeg; ++i) {
-		powers[i] = powers[i - 1] * powers[i - 1];
-	}
-	T res = T(ull(1));
-	for (size_t i = 0; i <= maxdeg; ++i) {
-		if (times & ((size_t)1 << i)) {
-			res = res * powers[i];
-		}
+	T res = T((ull)1);
+	while (times > 0) {
+		if (times & 1)
+			res = res * val;
+		times >>= 1;
+		// skip the last squaring: it is unused and may overflow
+		if (times > 0)
+			val = val * val;
 	}
 	return res;
 }

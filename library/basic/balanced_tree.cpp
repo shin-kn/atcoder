@@ -113,8 +113,8 @@ public:
 		DFS(std::forward<F>(func), [&](Node*) -> bool { return true; });
 	}
 
-	::Array<Node*, true> dfs_loc;
-	::Array<ull, true> dfs_num;
+	::LightArray<Node*> dfs_loc;
+	::LightArray<ull> dfs_num;
 
 	Queue<Node*> bfs_queue;
 
@@ -251,8 +251,11 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DFS(
 		return;
 	if (Size == 0)
 		return;
-	dfs_loc.Length = 0;
-	dfs_num.Length = 0;
+	// stack depth <= tree height <= Size
+	if (dfs_loc.Length < Size) {
+		dfs_loc.Allocate(2 * Size);
+		dfs_num.Allocate(2 * Size);
+	}
 	ull place = 0;
 	dfs_loc(0) = Root;
 	dfs_num(0) = 0;

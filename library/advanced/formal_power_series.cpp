@@ -31,14 +31,23 @@ public:
 	}
 
 	FormalPowerSeries
-	operator*(FormalPowerSeries& other) { // convolution of Degree(deg)
+	operator*(const FormalPowerSeries& other) { // convolution of Degree(deg)
 		return Prod(*this, other, Degree + other.Degree);
+	}
+	FormalPowerSeries
+	operator+(const FormalPowerSeries& other) { // convolution of Degree(deg)
+		FormalPowerSeries res(Max(Degree, other.Degree));
+		for (ull i = 0; i <= Degree; ++i)
+			res[i] += arr[i];
+		for (ull i = 0; i <= other.Degree; ++i)
+			res[i] += other.arr[i];
+		return res;
 	}
 
 	inline Mod<P>& operator[](size_t index) { return arr[index]; }
 	inline const Mod<P>& operator[](size_t index) const { return arr[index]; }
 
-	FormalPowerSeries Copy() {
+	FormalPowerSeries Copy() const {
 		FormalPowerSeries res(Degree);
 		for (size_t i = 0; i <= Degree; ++i)
 			res.arr[i] = arr[i];
@@ -60,7 +69,7 @@ template <ull P> std::ostream& operator<<(std::ostream& os, const FPS<P>& fps) {
 	return os;
 }
 
-template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
+template <ull P> FPS<P> Prod(const FPS<P>& f1, const FPS<P>& f2, ull max_deg) {
 
 	size_t deg = Min(f1.Degree + f2.Degree, max_deg);
 	size_t length = BiggerPower2(deg * 2 + 1);
@@ -70,7 +79,7 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 		LightArray<Mod<P>> arr_1, arr_2;
 
-		fourier_transform_inverse<P, LightArray<Mod<P>>>(
+		fourier_transform_inverse<P>(
 		  f1.arr, f2.arr, arr_1, arr_2, Min(f1.Degree + 1, deg + 1),
 		  Min(f2.Degree + 1, deg + 1), length
 		);
@@ -82,7 +91,7 @@ template <ull P> FPS<P> Prod(FPS<P>& f1, FPS<P>& f2, ull max_deg) {
 
 		FPS<P> res(deg);
 		LightArray<Mod<P>> res_raw =
-		  fourier_transform_forward<P, LightArray<Mod<P>>>(arr_3, length, length);
+		  fourier_transform_forward<P>(arr_3, length, length);
 		for (ull i = 0; i <= deg; ++i)
 			res.arr[i] = res_raw[i];
 		return res;
@@ -124,6 +133,28 @@ template <typename ArrayType>
 template <typename ArrayType>
 FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr) {
 	return Prod(arr, Infty<ull>);
+}
+
+// f^times mod x^(max_deg+1)
+template <ull P> FPS<P> Power(const FPS<P>& f, size_t times, ull max_deg) {
+	FPS<P> res(0);
+	res[0] = 1;
+	if (times == 0)
+		return res;
+	FPS<P> val = f.Copy();
+	while (true) {
+		if (times & 1)
+			res = Prod(res, val, max_deg);
+		times >>= 1;
+		if (times == 0)
+			break;
+		val = Prod(val, val, max_deg);
+	}
+	return res;
+}
+
+template <ull P> FPS<P> Power(const FPS<P>& f, size_t times) {
+	return Power(f, times, Infty<ull>);
 }
 
 template <size_t P>

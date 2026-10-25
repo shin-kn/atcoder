@@ -60,7 +60,7 @@ public:
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;
 
 	using AVLTree =
-	  AVLTree<T, Cell, decltype(LTOp<T>), BeforeChangeOp, AfterChangeOp>;
+	  ::AVLTree<T, Cell, decltype(LTOp<T>), BeforeChangeOp, AfterChangeOp>;
 
 	using Node = AVLTreeNode<T, Cell>;
 

@@ -7,14 +7,14 @@
 constexpr ull SMALL_TYPE = 100;
 constexpr ull SMALL_LENGTH = 8;
 
-template <typename T, bool Unsafe = false> class Array;
+template <typename T> class Array;
 
-template <typename T, bool Unsafe> class ArrayIterator {
+template <typename T> class ArrayIterator {
 	ull index;
-	Array<T, Unsafe>& arr;
+	Array<T>& arr;
 
 public:
-	ArrayIterator(ull index, Array<T, Unsafe>& arr) : index(index), arr(arr) {}
+	ArrayIterator(ull index, Array<T>& arr) : index(index), arr(arr) {}
 
 	T& operator*() { return arr[index]; }
 
@@ -30,7 +30,7 @@ public:
 	}
 };
 
-template <typename T, bool Unsafe> class Array {
+template <typename T> class Array {
 	T** arr = nullptr;
 
 	T** pointers = nullptr;
@@ -63,7 +63,7 @@ public:
 	inline void Set(T val) { this->Set(0, Length, val); }
 
 	inline T& operator[](size_t idx);
-	inline T& operator()(size_t idx);
+	inline T& operator()(size_t idx) const;
 
 	template <typename U> inline void Push(U&& val);
 
@@ -82,25 +82,15 @@ public:
 	inline void Clear();
 
 	// for iterator
-	ArrayIterator<T, Unsafe> begin() {
-		return ArrayIterator<T, Unsafe>(0, *this);
-	}
-	ArrayIterator<T, Unsafe> end() {
-		return ArrayIterator<T, Unsafe>(Length, *this);
-	}
+	ArrayIterator<T> begin() { return ArrayIterator<T>(0, *this); }
+	ArrayIterator<T> end() { return ArrayIterator<T>(Length, *this); }
 };
 
-template <typename T, bool Unsafe>
-template <typename U>
-void Array<T, Unsafe>::Push(U&& val) {
-	if constexpr (Unsafe) {
-		(*this)(Length) = std::forward<U>(val);
-	} else {
-		(*this)[Length] = std::forward<U>(val);
-	}
+template <typename T> template <typename U> void Array<T>::Push(U&& val) {
+	(*this)[Length] = std::forward<U>(val);
 }
 
-template <typename T, bool Unsafe> void Array<T, Unsafe>::Clear() {
+template <typename T> void Array<T>::Clear() {
 	arr = nullptr;
 	Length = 0;
 	Capacity = 0;
@@ -109,7 +99,7 @@ template <typename T, bool Unsafe> void Array<T, Unsafe>::Clear() {
 	pointerslength = 0;
 }
 
-template <typename T, bool Unsafe> Array<T, Unsafe>::~Array() {
+template <typename T> Array<T>::~Array() {
 	if (arr != nullptr) {
 		delete[] arr;
 	}
@@ -120,8 +110,7 @@ template <typename T, bool Unsafe> Array<T, Unsafe>::~Array() {
 		delete[] pointers;
 }
 
-template <typename T, bool Unsafe>
-Array<T, Unsafe>::Array(LightArray<T>&& other) {
+template <typename T> Array<T>::Array(LightArray<T>&& other) {
 	Length = other.Length;
 	Capacity = other.Length;
 	pointerscapacity = 1;
@@ -137,8 +126,7 @@ Array<T, Unsafe>::Array(LightArray<T>&& other) {
 	other.Length = 0;
 }
 
-template <typename T, bool Unsafe>
-void Array<T, Unsafe>::Set(ull start, ull end, T val) {
+template <typename T> void Array<T>::Set(ull start, ull end, T val) {
 	for (size_t i = start; i < end; ++i) {
 		if constexpr (std::is_copy_assignable<T>::value) {
 			(*this)[i] = val;
@@ -146,33 +134,20 @@ void Array<T, Unsafe>::Set(ull start, ull end, T val) {
 	}
 }
 
-template <typename T, bool Unsafe>
-inline T& Array<T, Unsafe>::operator[](ull idx) {
-	if constexpr (!Unsafe) {
-		if (Length <= idx) {
-			if (Capacity <= idx) {
-				Allocate(idx + 1);
-			}
-			Length = idx + 1;
+template <typename T> inline T& Array<T>::operator[](ull idx) {
+	if (Length <= idx) {
+		if (Capacity <= idx) {
+			Allocate(idx + 1);
 		}
+		Length = idx + 1;
 	}
 	return *(arr[idx]);
 }
 
-template <typename T, bool Unsafe>
-inline T& Array<T, Unsafe>::operator()(ull idx) {
-	if constexpr (Unsafe) {
-		if (Length <= idx) {
-			if (Capacity <= idx) {
-				Allocate(idx + 1);
-			}
-			Length = idx + 1;
-		}
-	}
+template <typename T> inline T& Array<T>::operator()(ull idx) const {
 	return *(arr[idx]);
 }
-template <typename T, bool Unsafe>
-inline void Array<T, Unsafe>::Allocate(ull cap) {
+template <typename T> inline void Array<T>::Allocate(ull cap) {
 	if (cap <= Capacity)
 		return;
 	cap = BiggerPower2(cap);
@@ -211,8 +186,7 @@ inline void Array<T, Unsafe>::Allocate(ull cap) {
 	Capacity = cap;
 }
 
-template <typename T, bool Unsafe>
-Array<T, Unsafe>::Array(Array<T, Unsafe>&& src) {
+template <typename T> Array<T>::Array(Array<T>&& src) {
 	arr = src.arr;
 	Length = src.Length;
 	Capacity = src.Capacity;
@@ -223,8 +197,7 @@ Array<T, Unsafe>::Array(Array<T, Unsafe>&& src) {
 	src.Clear();
 }
 
-template <typename T, bool Unsafe>
-Array<T, Unsafe>& Array<T, Unsafe>::operator=(Array<T, Unsafe>&& src) {
+template <typename T> Array<T>& Array<T>::operator=(Array<T>&& src) {
 	if (&src == this) {
 		return *this;
 	}
@@ -248,19 +221,21 @@ Array<T, Unsafe>& Array<T, Unsafe>::operator=(Array<T, Unsafe>&& src) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, Array<T>& arr) {
+std::ostream& operator<<(std::ostream& os, const Array<T>& arr) {
 	os << "[";
 	for (ull i = 0; i < arr.Length; ++i) {
 		if (i != 0)
 			os << ", ";
-		os << arr[i];
+		os << arr(i);
 	}
 	os << "]";
 	return os;
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, Array<T>&& arr) {
-	os << arr;
-	return os;
+std::istream& operator>>(std::istream& is, Array<T>& arr) {
+	T buf;
+	is >> buf;
+	arr.Push(buf);
+	return is;
 }

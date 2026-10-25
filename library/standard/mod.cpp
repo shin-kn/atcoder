@@ -26,10 +26,6 @@ public:
 	}
 	size_t Value() { return val; }
 	bool operator==(DynamicMod other) { return (val == other.val); }
-	DynamicMod& operator=(DynamicMod other) {
-		val = other.val;
-		return *(this);
-	}
 };
 
 struct DirectInit {};
@@ -170,10 +166,6 @@ public:
 		}
 	}
 	constexpr Mod& operator=(size_t num) { return Set(num); }
-	constexpr Mod& operator=(Mod other) {
-		val = other.val;
-		return *this;
-	}
 };
 
 template <size_t P> std::ostream& operator<<(std::ostream& os, Mod<P> val) {
@@ -212,9 +204,14 @@ public:
 NthRootsCacheManagerClass<NiceP> NiceRoots;
 NthRootsCacheManagerClass<NiceP, true> NiceInverseRoots;
 
-template <ull P, ArrayLike<Mod<P>> ArrayType>
+template <ull P>
 void fourier_transform_forward_part(
-  Mod<P>* cache, ArrayType& arr, ull arr_len, ull start, ull total_deg, ull deg
+  Mod<P>* cache,
+  const LightArray<Mod<P>>& arr,
+  ull arr_len,
+  ull start,
+  ull total_deg,
+  ull deg
 ) {
 	const ull Length = 1ull << (total_deg - deg - 1);
 	if (deg == total_deg - 1) {
@@ -256,10 +253,10 @@ void fourier_transform_forward_part(
 			}
 		} else {
 			const ull half_len = 1ull << (total_deg - deg - 2);
-			fourier_transform_forward_part<P, ArrayType>(
+			fourier_transform_forward_part<P>(
 			  cache, arr, arr_len, start, total_deg, deg + 1
 			);
-			fourier_transform_forward_part<P, ArrayType>(
+			fourier_transform_forward_part<P>(
 			  cache + half_len, arr, arr_len, start + half_len, total_deg, deg + 1
 			);
 
@@ -275,18 +272,17 @@ void fourier_transform_forward_part(
 	}
 }
 
-template <ull P, ArrayLike<Mod<P>> ArrayType>
-LightArray<Mod<P>>
-fourier_transform_forward(ArrayType& arr, ull arr_len, ull Length) {
+template <ull P>
+LightArray<Mod<P>> fourier_transform_forward(
+  const LightArray<Mod<P>>& arr, ull arr_len, ull Length
+) {
 	static_assert(P == NiceP);
 	assert(Length >= 1 && (ull)1 << Log2(Length) == Length);
 	ull total_deg = Log2(Length) + 1;
 	Mod<P>* cache = new Mod<P>[Length]();
 	arr_len = Min(arr_len, Length);
 
-	fourier_transform_forward_part<P, ArrayType>(
-	  cache, arr, arr_len, 0, total_deg, 0
-	);
+	fourier_transform_forward_part<P>(cache, arr, arr_len, 0, total_deg, 0);
 	return LightArray(cache, Length);
 }
 
@@ -355,10 +351,10 @@ void fourier_transform_inverse_part(
 	}
 }
 
-template <ull P, ArrayLike<Mod<P>> ArrayType>
+template <ull P>
 void fourier_transform_inverse(
-  ArrayType& arr_1,
-  ArrayType& arr_2,
+  const LightArray<Mod<P>>& arr_1,
+  const LightArray<Mod<P>>& arr_2,
   LightArray<Mod<P>>& res_1,
   LightArray<Mod<P>>& res_2,
   ull arr_len_1,

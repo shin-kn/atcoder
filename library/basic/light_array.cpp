@@ -80,7 +80,7 @@ LightArray<T>& LightArray<T>::operator=(LightArray&& other) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, LightArray<T>& arr) {
+std::ostream& operator<<(std::ostream& os, const LightArray<T>& arr) {
 	os << "[";
 	for (ull i = 0; i < arr.Length; ++i) {
 		if (i != 0)
@@ -92,7 +92,8 @@ std::ostream& operator<<(std::ostream& os, LightArray<T>& arr) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, LightArray<T>&& arr) {
-	os << arr;
-	return os;
+std::istream& operator>>(std::istream& is, LightArray<T>& arr) {
+	for (auto&& v : arr)
+		is >> v;
+	return is;
 }

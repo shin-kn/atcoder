@@ -3,7 +3,7 @@
 
 template <typename T> class Stack {
 public:
-	::Array<T, true> Arr;
+	::Array<T> Arr;
 	size_t Size = 0;
 	void Push(T);
 	T Pop();
@@ -30,20 +30,20 @@ public:
 template <typename T> inline void Stack<T>::Clear() { this->Size = 0; }
 
 template <typename T> inline void Stack<T>::Push(T n) {
-	this->Arr(this->Size) = n;
+	this->Arr[this->Size] = n;
 	this->Size++;
 }
 template <typename T> inline T Stack<T>::Pop() {
 	this->Size--;
-	return this->Arr[this->Size];
+	return this->Arr(this->Size);
 }
 
 template <typename T> inline T Stack<T>::Top() {
-	return this->Arr[this->Size - 1];
+	return this->Arr(this->Size - 1);
 }
 
 template <typename T> class Queue {
-	Array<T, true> Arr;
+	Array<T> Arr;
 	size_t length = 0;
 	size_t loc = 0;
 	void Refresh();
@@ -66,14 +66,14 @@ template <typename T> inline void Queue<T>::Clear() {
 
 template <typename T> inline void Queue<T>::Refresh() {
 	for (size_t i = 0; i + this->loc < this->length; i++) {
-		this->Arr[i] = this->Arr[this->loc + i];
+		this->Arr(i) = this->Arr(this->loc + i);
 	}
 	this->loc = 0;
 	this->length = this->Size;
 }
 
 template <typename T> inline void Queue<T>::Push(T n) {
-	this->Arr(this->length) = n;
+	this->Arr[this->length] = n;
 	++this->length;
 	++this->Size;
 	if (this->length - this->Size >= SomeBigSize) {
@@ -82,10 +82,10 @@ template <typename T> inline void Queue<T>::Push(T n) {
 }
 template <typename T> inline T Queue<T>::Pop() {
 	--this->Size;
-	return this->Arr[this->loc++];
+	return this->Arr(this->loc++);
 }
 
-template <typename T> inline T Queue<T>::Top() { return this->Arr[this->loc]; }
+template <typename T> inline T Queue<T>::Top() { return this->Arr(this->loc); }
 
 // this is implemented temporarily.
 //  needs improvement

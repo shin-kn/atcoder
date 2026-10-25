@@ -8,18 +8,11 @@ template <typename T, size_t N> class Tuple {
 public:
 	constexpr static ull Length = N;
 
-	Tuple() {}
+	Tuple() : Val{} {}
 
 	template <typename... Args>
 	  requires(sizeof...(Args) == N)
 	Tuple(Args... args) : Val(args...) {}
-
-	Tuple& operator=(const Tuple& src) {
-		for (size_t i = 0; i < N; ++i) {
-			Val[i] = src.Val[i];
-		}
-		return *this;
-	}
 
 	T& operator[](size_t idx) { return Val[idx]; }
 
@@ -81,11 +74,11 @@ std::ostream& operator<<(std::ostream& os, Tuple<T, N>& tuple) {
 }
 
 template <typename T1, typename T2> class Pair {
-	static_assert(std::is_copy_assignable<T1>::value);
-	static_assert(std::is_copy_assignable<T2>::value);
 
 public:
-	Pair(T1 val1, T2 val2) : val1(val1), val2(val2) {}
+	template <typename S1, typename S2>
+	Pair(S1&& val1, S2&& val2)
+	    : val1(std::forward<S1>(val1)), val2(std::forward<S2>(val2)) {}
 	Pair() : val1(T1()), val2(T2()) {}
 
 	T1 val1;
