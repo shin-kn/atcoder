@@ -15,18 +15,23 @@ public:
 	DynamicMod() { val = 0; }
 	DynamicMod(size_t init)
 	    : val((init < Dynamic_Mod_P) ? init : init % Dynamic_Mod_P) {}
-	inline DynamicMod operator+(DynamicMod other) {
-		return DynamicMod(val + other.val);
+	friend inline DynamicMod operator+(DynamicMod a, DynamicMod b) {
+		return DynamicMod(a.val + b.val);
 	}
-	inline DynamicMod operator-(DynamicMod other) {
-		return DynamicMod(Dynamic_Mod_P + val - other.val);
+	friend inline DynamicMod operator-(DynamicMod a, DynamicMod b) {
+		return DynamicMod(Dynamic_Mod_P + a.val - b.val);
 	}
-	inline DynamicMod operator*(DynamicMod other) {
-		return DynamicMod(val * other.val);
+	friend inline DynamicMod operator*(DynamicMod a, DynamicMod b) {
+		return DynamicMod(a.val * b.val);
 	}
 	size_t Value() { return val; }
 	bool operator==(DynamicMod other) { return (val == other.val); }
 };
+
+inline std::ostream& operator<<(std::ostream& os, DynamicMod val) {
+	os << val.Value();
+	return os;
+}
 
 struct DirectInit {};
 
@@ -42,9 +47,10 @@ public:
 	constexpr static size_t P_dash = 998244351;
 	constexpr static size_t ModR = ((size_t)1 << LogR) - 1;
 
-	constexpr Mod() { val = 0; }
+	constexpr Mod() = default;
 
-	constexpr Mod(ull n) { this->Set(n); }
+	constexpr Mod(ll n) { this->Set(n >= 0 ? (size_t)n : P - (size_t)(-n) % P); }
+
 	constexpr inline Mod(ull n, DirectInit) : val(n) {}
 
 	constexpr inline static Mod Raw(ull n) { return Mod(n, DirectInit{}); }
@@ -71,25 +77,16 @@ public:
 		return *this;
 	}
 
-	constexpr inline Mod operator+(Mod other) {
-		size_t res = val + other.val;
-		if (res >= P) {
-			return Raw(res - P);
-		}
-		return Raw(res);
-	}
+	friend constexpr inline Mod operator+(Mod a, Mod b) { return a += b; }
+	friend constexpr inline Mod operator-(Mod a, Mod b) { return a -= b; }
+	friend constexpr inline Mod operator*(Mod a, Mod b) { return a *= b; }
+	friend constexpr inline Mod operator/(Mod a, Mod b) { return a /= b; }
+
 	constexpr inline Mod& operator+=(Mod other) {
 		val += other.val;
 		if (val >= P)
 			val -= P;
 		return *(this);
-	}
-	constexpr inline Mod operator-(Mod other) {
-		size_t res = P + val - other.val;
-		if (res >= P) {
-			return Raw(res - P);
-		}
-		return Raw(res);
 	}
 	constexpr inline Mod& operator-=(Mod other) {
 		val += P;
@@ -98,20 +95,6 @@ public:
 			val -= P;
 		return *(this);
 	}
-	constexpr inline Mod operator*(Mod other) {
-		if constexpr (IsMont) {
-			return Raw(Montgomery(val * other.val));
-		} else {
-			size_t res = val * other.val;
-			if (res >= P)
-				res = res % P;
-			return Raw(res);
-		}
-	}
-	constexpr inline Mod operator*(ull other) { return *this * Mod().Set(other); }
-
-	inline Mod operator/(Mod other) { return (*this) * other.Inv(); }
-
 	constexpr inline Mod& operator*=(Mod other) {
 		if constexpr (IsMont) {
 			val = Montgomery(val * other.val);
@@ -122,7 +105,7 @@ public:
 		}
 		return (*this);
 	}
-	inline Mod& operator/=(Mod other) {
+	constexpr inline Mod& operator/=(Mod other) {
 		if constexpr (IsMont) {
 			val = Montgomery(val * (other.Inv().val));
 		} else {
@@ -132,7 +115,7 @@ public:
 		}
 		return (*this);
 	}
-	inline Mod Inv() {
+	constexpr inline Mod Inv() {
 		assert(val != 0);
 		if constexpr (IsMont) {
 			return Raw(
@@ -389,15 +372,18 @@ template <typename T> inline T Factorial(ull n) {
 	return counter;
 }
 template <> inline NMod Factorial<NMod>(ull n) {
-	static Array<NMod> arr(NMOD_COMB_CACHE_N);
-	if (arr.Length <= n) {
-		for (ull i = arr.Length; i <= n; ++i) {
-			if (i == 0)
-				arr[i] = 1;
-			else {
-				arr[i] = arr[i - 1] * NMod(i);
-			}
+	static LightArray<NMod> arr(NMOD_COMB_CACHE_N, 1);
+	static ull cached = 1;
+
+	for (; cached < NMOD_COMB_CACHE_N; ++cached) {
+		arr[cached] = arr[cached - 1] * cached;
+	}
+	if (n >= NMOD_COMB_CACHE_N) {
+		NMod val = arr[NMOD_COMB_CACHE_N - 1];
+		for (ull i = NMOD_COMB_CACHE_N; i <= n; ++i) {
+			val *= i;
 		}
+		return val;
 	}
 	return arr[n];
 }

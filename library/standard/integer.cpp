@@ -7,7 +7,10 @@
 
 template <std::integral T> inline T Sqrt(T num) { // assume num>=0
 	// res*res<=num is asserted
-	return Sup(T(0), num, [=](T n) -> bool { return n * n <= num; });
+	// upper keeps Sup's lower+upper from overflowing; n<=num/n replaces n*n<=num
+	const T cap = T(1) << ((std::numeric_limits<T>::digits + 1) / 2);
+	const T upper = num < cap ? num : cap;
+	return Sup(T(0), upper, [=](T n) -> bool { return n <= num / n; });
 }
 
 template <typename T> constexpr inline Tuple<T, 2> AxBy(T a, T b) { // a!=0,b!=0
@@ -42,7 +45,7 @@ template <typename T> inline T GCD(T a, T b) {
 
 template <typename T> inline T LCM(T a, T b) { return a * b / GCD(a, b); }
 
-template <typename T> inline constexpr bool IsPrime(T n) {
+template <typename T> inline constexpr bool IsPrimeNaive(T n) {
 	for (T i = 2; i * i <= n; ++i) {
 		if (n % i == 0)
 			return false;
@@ -50,54 +53,67 @@ template <typename T> inline constexpr bool IsPrime(T n) {
 	return true;
 }
 
-class Eratosthenes { // N log^2 N
-	Array<bool> arr;
+class Eratosthenes {                       // N log^2 N
+	Array<bool> arr = Array<bool>(2, false); // arr.length=Length+1
+	ull Length = 1;
 
 public:
 	Array<size_t> PrimeNumbers;
-	void Init(size_t n) {
+
+	void Allocate(size_t n) {
+		if (n <= Length)
+			return;
+
 		arr.Allocate(n + 1);
-		arr.Set(0, n + 1, true);
-		arr[1] = false;
-		for (size_t i = 2; i <= n; ++i) {
+		for (ull i = Length + 1; i < n + 1; ++i)
+			arr[i] = true;
+
+		for (auto&& prime : PrimeNumbers) {
+			ull loc = (Length + prime) / prime * prime;
+			while (loc <= n) {
+				arr[loc] = false;
+				loc += prime;
+			}
+		}
+
+		for (ull i = Length + 1; i < n + 1; ++i) {
 			if (!arr[i])
 				continue;
 			PrimeNumbers.Push(i);
-			for (size_t j = i * 2; j <= n; j += i) {
-				arr[j] = false;
+			ull loc = i * 2;
+			while (loc <= n) {
+				arr[loc] = false;
+				loc += i;
 			}
 		}
+		Length = n;
 	}
 	Eratosthenes() {}
-	Eratosthenes(size_t n) { Init(n); }
+	Eratosthenes(size_t n) { Allocate(n); }
 	inline bool operator[](size_t ind) { return arr[ind]; }
+	bool IsPrime(ull n) { return arr[n]; }
 };
 
-class Factorizer {
-	Eratosthenes erat;
+Array<ull> Factorize(ull n) {
+	static Eratosthenes erat;
+	assert(n != 0);
+	erat.Allocate(Sqrt(n));
 
-public:
-	void Init(size_t n) { erat.Init(n); }
-	Factorizer() {}
-	Factorizer(size_t n) { Init(n); }
+	Array<ull> res;
 
-	Array<Tuple<size_t, 2>> operator()(size_t num) {
-		Array<Tuple<size_t, 2>> arr;
-		if (num == 0)
-			return arr;
-		for (size_t i = 0; num != 1; ++i) {
-			size_t j = erat.PrimeNumbers[i];
-			size_t counter = 0;
-			while (num % j == 0) {
-				num /= j;
-				++counter;
-			}
-			if (counter != 0)
-				arr.Push(Tuple<size_t, 2>(j, counter));
+	for (auto&& prime : erat.PrimeNumbers) {
+		if (prime * prime > n) {
+			break;
 		}
-		return arr;
+		while (n % prime == 0) {
+			res.Push(prime);
+			n /= prime;
+		}
 	}
-};
+	if (n != 1)
+		res.Push(n);
+	return res;
+}
 
 class Fraction {
 	// reduces n/d with int128_t and stores it as ll
