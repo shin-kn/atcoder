@@ -294,6 +294,7 @@ __marimo__/
 test.txt
 solve.cpp
 submitted.cpp
+saved.cpp
 
 # Claude Code
 .claude/

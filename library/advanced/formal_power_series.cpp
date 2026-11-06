@@ -16,18 +16,12 @@ public:
 	FormalPowerSeries() {}
 	constexpr static ull ModP = P;
 	LightArray<Mod<P>> arr;
-	FormalPowerSeries(ull N) { SetDegree(N); }
+	explicit FormalPowerSeries(ull N) { SetDegree(N); }
 	ull Degree;
 
-	void Init() { arr.Set(0, Degree + 1, Mod<P>().Set(0)); }
-	void Init(Mod<P> val) { arr.Set(0, Degree + 1, val); }
-
 	void SetDegree(size_t deg) {
-		arr.Allocate(deg + 1);
+		arr.template Allocate<true>(deg + 1);
 		Degree = deg;
-		for (ull i = 0; i <= deg; ++i) {
-			arr[i] = 0;
-		}
 	}
 
 	FormalPowerSeries
@@ -43,9 +37,33 @@ public:
 			res[i] += other.arr[i];
 		return res;
 	}
+	FormalPowerSeries
+	operator-(const FormalPowerSeries& other) { // convolution of Degree(deg)
+		FormalPowerSeries res(Max(Degree, other.Degree));
+		for (ull i = 0; i <= Degree; ++i)
+			res[i] += arr[i];
+		for (ull i = 0; i <= other.Degree; ++i)
+			res[i] -= other.arr[i];
+		return res;
+	}
 
 	inline Mod<P>& operator[](size_t index) { return arr[index]; }
 	inline const Mod<P>& operator[](size_t index) const { return arr[index]; }
+
+	friend constexpr inline FormalPowerSeries
+	operator*(Mod<P> a, const FormalPowerSeries& b) {
+		FormalPowerSeries res(b.Degree);
+		for (ull i = 0; i <= b.Degree; ++i)
+			res[i] = a * b[i];
+		return res;
+	}
+	friend constexpr inline FormalPowerSeries
+	operator*(const FormalPowerSeries& b, Mod<P> a) {
+		FormalPowerSeries res(b.Degree);
+		for (ull i = 0; i <= b.Degree; ++i)
+			res[i] = b[i] * a;
+		return res;
+	}
 
 	FormalPowerSeries Copy() const {
 		FormalPowerSeries res(Degree);

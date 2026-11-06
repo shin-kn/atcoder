@@ -18,7 +18,7 @@ public:
 	inline void Set(T val) { this->Set(0, Length, val); }
 	inline void Set(size_t start, size_t end, T val);
 
-	void Allocate(size_t n);
+	template <bool UseInit = false> void Allocate(size_t n);
 
 	inline T& operator[](size_t idx) { return arr[idx]; }
 	inline const T& operator[](size_t idx) const { return arr[idx]; }
@@ -52,12 +52,18 @@ template <typename T> void LightArray<T>::Set(size_t start, size_t end, T val) {
 	}
 }
 
-template <typename T> void LightArray<T>::Allocate(size_t n) {
+template <typename T>
+template <bool UseInit>
+void LightArray<T>::Allocate(size_t n) {
 	Length = n;
 	if (arr != nullptr) {
 		delete[] arr;
 	}
-	arr = new T[n];
+	if constexpr (UseInit) {
+		arr = new T[n]{};
+	} else {
+		arr = new T[n];
+	}
 }
 
 template <typename T> LightArray<T>::LightArray(LightArray&& src) {

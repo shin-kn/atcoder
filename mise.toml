@@ -4,3 +4,13 @@ run=["clang-format -i *.cpp library/*.cpp library/basic/*.cpp library/standard/*
 [tasks.init]
 
 run=["cp solve_default.cpp solve.cpp"]
+
+[tasks.save]
+
+run=["cp solve.cpp saved.cpp","cp solve_default.cpp solve.cpp"]
+
+[tasks.load]
+run=["cp saved.cpp solve.cpp"]
+
+[tasks.clear]
+run=["cp solve_default.cpp solve.cpp"]

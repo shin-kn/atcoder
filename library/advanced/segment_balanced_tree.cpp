@@ -53,6 +53,7 @@ public:
 	bool Leq(T);
 	bool Geq(T);
 	void Delete();
+	ull Number() { return avltree.Number(); }
 
 	U Eval(T, T);
 	void Act(V, T, T);

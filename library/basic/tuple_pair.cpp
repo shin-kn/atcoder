@@ -8,13 +8,13 @@ template <typename T, size_t N> class Tuple {
 public:
 	constexpr static ull Length = N;
 
-	Tuple() : Val{} {}
-
+	Tuple() = default;
 	template <typename... Args>
 	  requires(sizeof...(Args) == N)
-	Tuple(Args... args) : Val(args...) {}
+	constexpr Tuple(Args... args) : Val(args...) {}
 
-	T& operator[](size_t idx) { return Val[idx]; }
+	constexpr T& operator[](const size_t idx) { return Val[idx]; }
+	constexpr const T& operator[](const size_t idx) const { return Val[idx]; }
 
 	Tuple operator+(const Tuple& other)
 	  requires requires(T a, T b) { a + b; }
@@ -62,7 +62,7 @@ template <typename T, typename... Args>
 Tuple(T, Args...) -> Tuple<std::remove_cvref_t<T>, sizeof...(Args) + 1>;
 
 template <typename T, ull N>
-std::ostream& operator<<(std::ostream& os, Tuple<T, N>& tuple) {
+std::ostream& operator<<(std::ostream& os, const Tuple<T, N>& tuple) {
 	os << "(";
 	for (ull i = 0; i < N; ++i) {
 		if (i != 0)
@@ -99,7 +99,7 @@ template <typename T, typename U>
 Pair(T, U) -> Pair<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
 template <typename T1, typename T2>
-std::ostream& operator<<(std::ostream& os, Pair<T1, T2> val) {
+std::ostream& operator<<(std::ostream& os, const Pair<T1, T2>& val) {
 	os << "(" << val.val1 << "," << val.val2 << ")";
 	return os;
 }

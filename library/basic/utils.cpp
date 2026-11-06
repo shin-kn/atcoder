@@ -8,13 +8,13 @@ inline T Abs(T num) { // it is unsafe a little
 	return Min(num, num * T(-1));
 }
 
-template <std::signed_integral T> inline T Abs(T num) {
+template <std::signed_integral T> constexpr inline T Abs(T num) {
 	if (num < T(0))
 		return num * T(-1);
 	return num;
 }
 
-template <std::floating_point T> inline T Abs(T num) {
+template <std::floating_point T> constexpr inline T Abs(T num) {
 	return num < T(0.0) ? T(-1.0) * num : num;
 }
 

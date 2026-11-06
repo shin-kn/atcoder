@@ -198,7 +198,9 @@ template <typename T, typename U> Tree<T> Graph<T, U>::GenerateTree(ull root) {
 	auto cango = [&](ull path) -> bool {
 		if (reached[Edges(path).To])
 			return false;
-		tree.Connect(Edges(path).From, Edges(path).To, PathCapacity(path));
+		// unweighted edges (Connect without cap) have no PathCapacity entry
+		T val = path < PathCapacity.Length ? PathCapacity(path) : T();
+		tree.Connect(Edges(path).From, Edges(path).To, val);
 		return true;
 	};
 	auto firstreach = [&](ull node) { reached[node] = true; };

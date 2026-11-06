@@ -231,7 +231,7 @@ public:
 private:
 	void Init(ull N, T init_val);
 	T Add(T val1, ull len1, T val2, ull len2);
-	T Apply(U action, ull loc);
+	T Act(U action, ull loc);
 	ull CellSize(ull loc) { return CellEnd[loc] - CellStart[loc] + 1; }
 
 	void Propagate(ull);
@@ -325,7 +325,7 @@ template <
   typename AddFunc,
   typename Func,
   typename ConvoluteFunc>
-T LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Apply(
+T LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Act(
   U action, ull loc
 ) {
 	if constexpr (FunctionConcept<Func, T, U, T>) {
@@ -373,7 +373,7 @@ inline void
 LazySegmentTreeClass<T, U, AddFunc, Func, ConvoluteFunc>::Execute(ull loc) {
 	if (ActIsNull[loc])
 		return;
-	Val[loc] = Apply(Actions[loc], loc);
+	Val[loc] = Act(Actions[loc], loc);
 	Propagate(loc);
 }
 

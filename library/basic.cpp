@@ -3,6 +3,7 @@
 #include "basic/array.cpp"
 #include "basic/balanced_tree.cpp"
 #include "basic/base.cpp"
+#include "basic/bitset.cpp"
 #include "basic/function_type.cpp"
 #include "basic/heap.cpp"
 #include "basic/light_array.cpp"
