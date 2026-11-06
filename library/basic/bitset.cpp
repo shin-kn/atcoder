@@ -1,3 +1,4 @@
+#pragma once
 #include "./base.cpp"
 
 template <ull N> class BitSet {
