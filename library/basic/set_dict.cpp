@@ -5,16 +5,18 @@
 #include <compare>
 
 // valuetree's type is named only when the values can be ordered, so that
-// AVLTree<Pair<U, ull>, ull> is never formed for an unordered U (e.g. Mod)
+// AVLTree<Pair<U, T>, ull> is never formed for an unordered U (e.g. Mod)
 struct DictNoValueTree {};
-template <bool UseValueTree, typename U> struct DictValueTree {
+template <bool UseValueTree, typename U, typename T> struct DictValueTree {
 	using type = DictNoValueTree;
 };
-template <typename U> struct DictValueTree<true, U> {
-	using type = AVLTree<Pair<U, ull>, ull>;
+template <typename U, typename T> struct DictValueTree<true, U, T> {
+	using type = AVLTree<Pair<U, T>, ull>;
 };
 
-template <typename T, typename U>
+// ValueOrder = true enables Min/Max/MinKey/MaxKey/Nth, at the cost of keeping
+// every value in a second tree (extra tree walks on each value change)
+template <typename T, typename U, bool ValueOrder = false>
   requires requires(T x, T y) {
 	  { x > y } -> std::convertible_to<bool>;
 	  { x < y } -> std::convertible_to<bool>;
@@ -28,9 +30,14 @@ public:
 			ind = Infty<ull>;
 	}
 
-	// valuetree keeps copies of the values in Pair<U, ull>, whose defaulted
-	// <=> needs U to have <=>
-	static constexpr bool UseValueTree = std::three_way_comparable<U> && std::copyable<U>;
+	// valuetree keeps copies of (value, key) in Pair<U, T>, ordered by value and
+	// then by key; Pair's defaulted <=> needs both U and T to have <=>
+	static_assert(
+	  !ValueOrder || (std::three_way_comparable<U> && std::copyable<U> &&
+	                  std::three_way_comparable<T> && std::copyable<T>),
+	  "Dict<T, U, true> needs U and T to be three-way comparable and copyable"
+	);
+	static constexpr bool UseValueTree = ValueOrder;
 
 	U& operator[](const T& key) {
 		update_ref();
@@ -38,11 +45,11 @@ public:
 			search_index = (avail_value_indexes.Size > 0) ? avail_value_indexes.Pop() : values.Length;
 			indextree.Push(key, search_index);
 			if constexpr (UseValueTree) {
-				valuetree.Push(Pair<U, ull>(U(), search_index), search_index);
-				Pair<U, ull> added(U(), search_index);
-				if (min_index != Infty<ull> && added < Pair<U, ull>(values(min_index), min_index))
+				Pair<U, T> added(U(), key);
+				valuetree.Push(added, search_index);
+				if (min_index != Infty<ull> && added < value_key(min_index))
 					min_index = search_index;
-				if (max_index != Infty<ull> && Pair<U, ull>(values(max_index), max_index) < added)
+				if (max_index != Infty<ull> && value_key(max_index) < added)
 					max_index = search_index;
 			}
 			// [] here: a new search_index may be values.Length, so the arrays must
@@ -75,10 +82,10 @@ public:
 		assert(search_index != Infty<ull>);
 		if constexpr (UseValueTree) {
 			if (referred != nullptr && referred_index == search_index) {
-				valuetree.Delete(Pair<U, ull>(before_change, search_index));
+				valuetree.Delete(Pair<U, T>(before_change, keys(search_index)));
 				referred = nullptr;
 			} else {
-				valuetree.Delete(Pair<U, ull>(values(search_index), search_index));
+				valuetree.Delete(value_key(search_index));
 			}
 		}
 		if (min_index == search_index)
@@ -135,6 +142,15 @@ public:
 		Max();
 		return keys(max_index);
 	}
+	// the n-th smallest value (0-indexed), ties broken by key
+	U& Nth(ull n)
+	  requires UseValueTree
+	{
+		update_ref();
+		assert(n < Size);
+		valuetree.Nth(n);
+		return *(create_ref(valuetree.Data()));
+	}
 
 	LightArray<T> Keys() { return indextree.IndexArray(); }
 
@@ -168,7 +184,10 @@ private:
 	AVLTree<T, ull> indextree;
 
 	// only used when UseValueTree
-	typename DictValueTree<UseValueTree, U>::type valuetree;
+	typename DictValueTree<UseValueTree, U, T>::type valuetree;
+
+	// the valuetree key of the entry at index
+	Pair<U, T> value_key(ull index) { return Pair<U, T>(values(index), keys(index)); }
 
 	U* referred = nullptr;
 	ull referred_index;
@@ -180,13 +199,13 @@ private:
 			if (referred == nullptr || before_change == *referred)
 				return;
 			// keep min_index/max_index consistent with valuetree's order,
-			// which compares (value, index) pairs
-			Pair<U, ull> changed(*referred, referred_index);
+			// which compares (value, key) pairs
+			Pair<U, T> changed(*referred, keys(referred_index));
 			if (min_index != Infty<ull>) {
 				if (referred_index == min_index) {
 					if (before_change < *referred)
 						min_index = Infty<ull>;
-				} else if (changed < Pair<U, ull>(values(min_index), min_index)) {
+				} else if (changed < value_key(min_index)) {
 					min_index = referred_index;
 				}
 			}
@@ -194,12 +213,12 @@ private:
 				if (referred_index == max_index) {
 					if (*referred < before_change)
 						max_index = Infty<ull>;
-				} else if (Pair<U, ull>(values(max_index), max_index) < changed) {
+				} else if (value_key(max_index) < changed) {
 					max_index = referred_index;
 				}
 			}
 
-			valuetree.Find(Pair<U, ull>(before_change, referred_index));
+			valuetree.Find(Pair<U, T>(before_change, keys(referred_index)));
 			valuetree.Delete();
 			valuetree.Push(changed, referred_index);
 			before_change = *referred;
