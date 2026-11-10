@@ -1,89 +1,88 @@
 #pragma once
+#include "array.cpp"
 #include "base.cpp"
+#include "light_array.cpp"
+#include "min_max.cpp"
+
+template <typename T> class FastStack {
+public:
+	::LightArray<T> arr;
+	ull Size = 0;
+	ull Capacity = 0;
+	FastStack() {}
+	FastStack(size_t n) : Capacity(n) { arr.Allocate(n); }
+	void Push(T n) {
+		if (Capacity == Size) {
+			Capacity = Max(ull(2), Capacity * 2);
+			LightArray<T> newarr(Capacity);
+			for (ull i = 0; i < Size; ++i)
+				newarr[i] = std::move(arr[i]);
+			arr = std::move(newarr);
+		}
+		arr[Size] = n;
+		++Size;
+	}
+	T Pop() {
+		--Size;
+		return arr[Size];
+	}
+	T Top() { return arr[Size - 1]; }
+	void Clear() { Size = 0; }
+};
 
 template <typename T> class Stack {
 public:
-	::Array<T> Arr;
+	::Array<T> arr;
 	size_t Size = 0;
-	void Push(T);
-	T Pop();
-	T Top();
 	Stack() {}
-	Stack(size_t n) { Arr.Allocate(n); }
-	void Clear();
-	Stack(Stack&& other) {
-		Arr = std::move(other.Arr);
-		Size = other.Size;
-		other.Size = 0;
+	Stack(size_t n) { arr.Allocate(n); }
+	void Push(T n) {
+		arr[Size] = n;
+		++Size;
 	}
-	Stack& operator=(Stack&& other) {
-		Arr = std::move(other.Arr);
-		Size = other.Size;
-		other.Size = 0;
-		return *this;
+	T Pop() {
+		--Size;
+		return arr(Size);
 	}
-
-	Stack(Stack& other) = delete;
-	Stack& operator=(Stack& other) = delete;
+	T Top() { return arr(Size - 1); }
+	void Clear() { Size = 0; }
 };
 
-template <typename T> inline void Stack<T>::Clear() { this->Size = 0; }
-
-template <typename T> inline void Stack<T>::Push(T n) {
-	this->Arr[this->Size] = n;
-	this->Size++;
-}
-template <typename T> inline T Stack<T>::Pop() {
-	this->Size--;
-	return this->Arr(this->Size);
-}
-
-template <typename T> inline T Stack<T>::Top() { return this->Arr(this->Size - 1); }
-
 template <typename T> class Queue {
-	Array<T> Arr;
+	Array<T> arr;
 	size_t length = 0;
 	size_t loc = 0;
-	void Refresh();
+	void Refresh() {
+		for (size_t i = 0; i + loc < length; i++) {
+			arr(i) = arr(loc + i);
+		}
+		loc = 0;
+		length = Size;
+	}
 
 public:
 	size_t Size = 0;
-	void Push(T);
-	T Pop();
-	T Top();
 	Queue() {}
-	Queue(size_t n) { Arr.Allocate(n); }
-	void Clear();
+	Queue(size_t n) { arr.Allocate(n); }
+	void Push(T n) {
+		arr[length] = n;
+		++length;
+		++Size;
+		if (length - Size >= SomeBigSize) {
+			Refresh();
+		}
+	}
+	T Pop() {
+		--Size;
+		return arr(loc++);
+	}
+	T Top() { return arr(loc); }
+	void Clear() {
+		length = 0;
+		loc = 0;
+		Size = 0;
+	}
 };
-
-template <typename T> inline void Queue<T>::Clear() {
-	this->length = 0;
-	this->loc = 0;
-	this->Size = 0;
-}
-
-template <typename T> inline void Queue<T>::Refresh() {
-	for (size_t i = 0; i + this->loc < this->length; i++) {
-		this->Arr(i) = this->Arr(this->loc + i);
-	}
-	this->loc = 0;
-	this->length = this->Size;
-}
-
-template <typename T> inline void Queue<T>::Push(T n) {
-	this->Arr[this->length] = n;
-	++this->length;
-	++this->Size;
-	if (this->length - this->Size >= SomeBigSize) {
-		this->Refresh();
-	}
-}
-template <typename T> inline T Queue<T>::Pop() {
-	--this->Size;
-	return this->Arr(this->loc++);
-}
-
-template <typename T> inline T Queue<T>::Top() { return this->Arr(this->loc); }
 
 // this is implemented temporarily.
 //  needs improvement

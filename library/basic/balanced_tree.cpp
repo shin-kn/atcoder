@@ -98,7 +98,9 @@ public:
 
 	void Update(Node*);
 
-	Stack<Pair<Node*, bool>> FindRoutes;
+	// holds one root-to-leaf path; an AVL tree of n nodes is at most
+	// 1.44 log2(n) high, so 64 covers about 10^13 nodes before it grows
+	FastStack<Pair<Node*, bool>> FindRoutes{64};
 
 	// return top of the node
 	// assume childrens of the node is balanced, and their weight and length are
