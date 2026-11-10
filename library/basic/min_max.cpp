@@ -26,7 +26,7 @@ inline T Max(T val1, T val2, Args... args) {
 	return Max(val1, Max(val2, args...));
 }
 
-template <typename T> inline void UpdateMin(T& val1, T val2) {
+template <typename T> inline void UpdateMin(T& val1, const T& val2) {
 	static_assert(std::is_copy_assignable<T>::value);
 	if (val2 < val1)
 		val1 = val2;

@@ -66,11 +66,18 @@ std::ostream& operator<<(std::ostream& os, const Tuple<T, N>& tuple) {
 	os << "(";
 	for (ull i = 0; i < N; ++i) {
 		if (i != 0)
-			cout << ", ";
-		cout << tuple[i];
+			os << ", ";
+		os << tuple[i];
 	}
-	cout << ")";
+	os << ")";
 	return os;
+}
+
+template <typename T, ull N>
+std::istream& operator>>(std::istream& is, Tuple<T, N>& tuple) {
+	for (ull i = 0; i < N; ++i)
+		is >> tuple[i];
+	return is;
 }
 
 template <typename T1, typename T2> class Pair {
@@ -102,4 +109,10 @@ template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& os, const Pair<T1, T2>& val) {
 	os << "(" << val.val1 << "," << val.val2 << ")";
 	return os;
+}
+
+template <typename T1, typename T2>
+std::istream& operator>>(std::istream& is, Pair<T1, T2>& val) {
+	is >> val.val1 >> val.val2;
+	return is;
 }
