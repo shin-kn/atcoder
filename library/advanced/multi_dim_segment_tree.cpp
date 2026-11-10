@@ -16,8 +16,7 @@ public:
 		Init(std::forward<Args>(args)...);
 	}
 
-	template <FunctionConcept<T, T, T> AddFunc>
-	void Init(Tuple<ull, N>, T, AddFunc&&);
+	template <FunctionConcept<T, T, T> AddFunc> void Init(Tuple<ull, N>, T, AddFunc&&);
 
 	FunctionType<T(T, T)> add;
 
@@ -46,9 +45,7 @@ public:
 
 template <typename T, ull N>
 template <FunctionConcept<T, T, T> AddFunc>
-void MultiDimSegmentTree<T, N>::Init(
-  Tuple<ull, N> size, T init_val, AddFunc&& func
-) {
+void MultiDimSegmentTree<T, N>::Init(Tuple<ull, N> size, T init_val, AddFunc&& func) {
 	add = FunctionType<T(T, T)>(std::forward<AddFunc>(func));
 
 	Length = BiggerPower2(size[0]);
@@ -88,9 +85,7 @@ void MultiDimSegmentTree<T, N>::update_full(
 }
 
 template <typename T, ull N>
-void MultiDimSegmentTree<T, N>::update_dif(
-  MultiDimSegmentTree& tree1, MultiDimSegmentTree& tree2
-) {
+void MultiDimSegmentTree<T, N>::update_dif(MultiDimSegmentTree& tree1, MultiDimSegmentTree& tree2) {
 	LightArray<ull>& dif(tree1.has_dif ? tree1.dif_array : tree2.dif_array);
 	for (ull i = 0; i < Degree; ++i) {
 		ull loc = dif[i];
@@ -100,8 +95,7 @@ void MultiDimSegmentTree<T, N>::update_dif(
 	has_dif = true;
 }
 
-template <typename T, ull N>
-void MultiDimSegmentTree<T, N>::set(Tuple<ull, N> loc, T val) {
+template <typename T, ull N> void MultiDimSegmentTree<T, N>::set(Tuple<ull, N> loc, T val) {
 	ull cell_loc = Length - 1 + loc[0];
 	Tuple<ull, N - 1> new_loc;
 	for (ull i = 0; i < N - 1; ++i)
@@ -129,9 +123,7 @@ ull MultiDimSegmentTree<T, N>::CellIndex(size_t start, size_t logsize) {
 }
 
 template <typename T, ull N>
-T MultiDimSegmentTree<T, N>::Eval(
-  Tuple<ull, N> start_tuple, Tuple<ull, N> end_tuple
-) {
+T MultiDimSegmentTree<T, N>::Eval(Tuple<ull, N> start_tuple, Tuple<ull, N> end_tuple) {
 	ull start = start_tuple[0];
 	ull end = end_tuple[0];
 
@@ -165,8 +157,7 @@ T MultiDimSegmentTree<T, N>::Eval(
 	T counter;
 	counter = Val[eval_stack.Pop()].Eval(new_start_set, new_end_set);
 	while (eval_stack.Size > 0) {
-		counter =
-		  add(counter, Val[eval_stack.Pop()].Eval(new_start_set, new_end_set));
+		counter = add(counter, Val[eval_stack.Pop()].Eval(new_start_set, new_end_set));
 	}
 	return counter;
 }
@@ -179,8 +170,7 @@ public:
 		Init(std::forward<Args>(args)...);
 	}
 
-	template <FunctionConcept<T, T, T> AddFunc>
-	void Init(Tuple<ull, 0>, T init_val, AddFunc&& func) {
+	template <FunctionConcept<T, T, T> AddFunc> void Init(Tuple<ull, 0>, T init_val, AddFunc&& func) {
 		add = FunctionType<T(T, T)>(std::forward<AddFunc>(func));
 		val = init_val;
 	}

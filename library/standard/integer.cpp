@@ -125,9 +125,7 @@ public:
 	Fraction() {}
 	Fraction(ll n) : num(n) {}
 	Fraction(ll n, ll d) { Set(n, d); }
-	bool operator==(const Fraction& other) const {
-		return num == other.num && den == other.den;
-	}
+	bool operator==(const Fraction& other) const { return num == other.num && den == other.den; }
 	bool operator<(const Fraction& other) const {
 		return int128_t(num) * other.den < int128_t(other.num) * den;
 	}
@@ -136,9 +134,7 @@ public:
 	Fraction operator-(const Fraction& other) const;
 	Fraction operator*(const Fraction& other) const;
 	Fraction Inv() const;
-	Fraction operator/(const Fraction& other) const {
-		return *this * other.Inv();
-	}
+	Fraction operator/(const Fraction& other) const { return *this * other.Inv(); }
 };
 
 inline void Fraction::Set(int128_t n, int128_t d) {
@@ -160,19 +156,13 @@ inline void Fraction::Set(int128_t n, int128_t d) {
 
 inline Fraction Fraction::operator+(const Fraction& other) const {
 	Fraction res;
-	res.Set(
-	  int128_t(num) * other.den + int128_t(other.num) * den,
-	  int128_t(den) * other.den
-	);
+	res.Set(int128_t(num) * other.den + int128_t(other.num) * den, int128_t(den) * other.den);
 	return res;
 }
 
 inline Fraction Fraction::operator-(const Fraction& other) const {
 	Fraction res;
-	res.Set(
-	  int128_t(num) * other.den - int128_t(other.num) * den,
-	  int128_t(den) * other.den
-	);
+	res.Set(int128_t(num) * other.den - int128_t(other.num) * den, int128_t(den) * other.den);
 	return res;
 }
 

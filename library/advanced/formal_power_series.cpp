@@ -24,12 +24,10 @@ public:
 		Degree = deg;
 	}
 
-	FormalPowerSeries
-	operator*(const FormalPowerSeries& other) { // convolution of Degree(deg)
+	FormalPowerSeries operator*(const FormalPowerSeries& other) { // convolution of Degree(deg)
 		return Prod(*this, other, Degree + other.Degree);
 	}
-	FormalPowerSeries
-	operator+(const FormalPowerSeries& other) { // convolution of Degree(deg)
+	FormalPowerSeries operator+(const FormalPowerSeries& other) { // convolution of Degree(deg)
 		FormalPowerSeries res(Max(Degree, other.Degree));
 		for (ull i = 0; i <= Degree; ++i)
 			res[i] += arr[i];
@@ -37,8 +35,7 @@ public:
 			res[i] += other.arr[i];
 		return res;
 	}
-	FormalPowerSeries
-	operator-(const FormalPowerSeries& other) { // convolution of Degree(deg)
+	FormalPowerSeries operator-(const FormalPowerSeries& other) { // convolution of Degree(deg)
 		FormalPowerSeries res(Max(Degree, other.Degree));
 		for (ull i = 0; i <= Degree; ++i)
 			res[i] += arr[i];
@@ -50,15 +47,13 @@ public:
 	inline Mod<P>& operator[](size_t index) { return arr[index]; }
 	inline const Mod<P>& operator[](size_t index) const { return arr[index]; }
 
-	friend constexpr inline FormalPowerSeries
-	operator*(Mod<P> a, const FormalPowerSeries& b) {
+	friend constexpr inline FormalPowerSeries operator*(Mod<P> a, const FormalPowerSeries& b) {
 		FormalPowerSeries res(b.Degree);
 		for (ull i = 0; i <= b.Degree; ++i)
 			res[i] = a * b[i];
 		return res;
 	}
-	friend constexpr inline FormalPowerSeries
-	operator*(const FormalPowerSeries& b, Mod<P> a) {
+	friend constexpr inline FormalPowerSeries operator*(const FormalPowerSeries& b, Mod<P> a) {
 		FormalPowerSeries res(b.Degree);
 		for (ull i = 0; i <= b.Degree; ++i)
 			res[i] = b[i] * a;
@@ -98,8 +93,7 @@ template <ull P> FPS<P> Prod(const FPS<P>& f1, const FPS<P>& f2, ull max_deg) {
 		LightArray<Mod<P>> arr_1, arr_2;
 
 		fourier_transform_inverse<P>(
-		  f1.arr, f2.arr, arr_1, arr_2, Min(f1.Degree + 1, deg + 1),
-		  Min(f2.Degree + 1, deg + 1), length
+		  f1.arr, f2.arr, arr_1, arr_2, Min(f1.Degree + 1, deg + 1), Min(f2.Degree + 1, deg + 1), length
 		);
 		LightArray<Mod<P>> arr_3(length);
 		Mod<P> coef = Mod<P>(1) / Mod<P>(length);
@@ -108,8 +102,7 @@ template <ull P> FPS<P> Prod(const FPS<P>& f1, const FPS<P>& f2, ull max_deg) {
 		}
 
 		FPS<P> res(deg);
-		LightArray<Mod<P>> res_raw =
-		  fourier_transform_forward<P>(arr_3, length, length);
+		LightArray<Mod<P>> res_raw = fourier_transform_forward<P>(arr_3, length, length);
 		for (ull i = 0; i <= deg; ++i)
 			res.arr[i] = res_raw[i];
 		return res;
@@ -118,9 +111,8 @@ template <ull P> FPS<P> Prod(const FPS<P>& f1, const FPS<P>& f2, ull max_deg) {
 }
 
 template <typename ArrayType>
-  requires std::
-    same_as<ArrayElement<ArrayType>, FPS<ArrayElement<ArrayType>::ModP>>
-  FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr, ull max_deg) {
+  requires std::same_as<ArrayElement<ArrayType>, FPS<ArrayElement<ArrayType>::ModP>>
+FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr, ull max_deg) {
 	using FPS_Type = FPS<ArrayElement<ArrayType>::ModP>;
 	if (arr.Length == 0) {
 		FPS_Type res(0);
@@ -148,8 +140,7 @@ template <typename ArrayType>
 	return arr[res_loc.val1].Copy();
 }
 
-template <typename ArrayType>
-FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr) {
+template <typename ArrayType> FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr) {
 	return Prod(arr, Infty<ull>);
 }
 
@@ -171,12 +162,9 @@ template <ull P> FPS<P> Power(const FPS<P>& f, size_t times, ull max_deg) {
 	return res;
 }
 
-template <ull P> FPS<P> Power(const FPS<P>& f, size_t times) {
-	return Power(f, times, Infty<ull>);
-}
+template <ull P> FPS<P> Power(const FPS<P>& f, size_t times) { return Power(f, times, Infty<ull>); }
 
-template <size_t P>
-Mod<P> BostanMori(FPS<P>& p, FPS<P>& q, size_t N) { //[x^N] P(x)/Q(x),
+template <size_t P> Mod<P> BostanMori(FPS<P>& p, FPS<P>& q, size_t N) { //[x^N] P(x)/Q(x),
 	assert(q[0] != Mod<P>(0));
 	FPS<P> upper = p.Copy();
 	FPS<P> lower = q.Copy();

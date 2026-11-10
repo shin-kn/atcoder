@@ -1,6 +1,7 @@
 # Language指定なし(共通定義)。
 # 既定値としてLLVMを使用、インデントをスペース4つに指定する。
 BasedOnStyle: LLVM
+ColumnLimit: 100
 UseTab: ForIndentation
 IndentWidth: 2
 TabWidth: 2

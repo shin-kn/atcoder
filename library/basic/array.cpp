@@ -18,12 +18,8 @@ public:
 
 	T& operator*() { return arr[index]; }
 
-	bool operator==(const ArrayIterator& other) const {
-		return index == other.index;
-	}
-	bool operator!=(const ArrayIterator& other) const {
-		return index != other.index;
-	}
+	bool operator==(const ArrayIterator& other) const { return index == other.index; }
+	bool operator!=(const ArrayIterator& other) const { return index != other.index; }
 	ArrayIterator& operator++() {
 		++index;
 		return *this;
@@ -144,9 +140,7 @@ template <typename T> inline T& Array<T>::operator[](ull idx) {
 	return *(arr[idx]);
 }
 
-template <typename T> inline T& Array<T>::operator()(ull idx) const {
-	return *(arr[idx]);
-}
+template <typename T> inline T& Array<T>::operator()(ull idx) const { return *(arr[idx]); }
 template <typename T> inline void Array<T>::Allocate(ull cap) {
 	if (cap <= Capacity)
 		return;
@@ -220,8 +214,7 @@ template <typename T> Array<T>& Array<T>::operator=(Array<T>&& src) {
 	return *this;
 }
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Array<T>& arr) {
+template <typename T> std::ostream& operator<<(std::ostream& os, const Array<T>& arr) {
 	os << "[";
 	for (ull i = 0; i < arr.Length; ++i) {
 		if (i != 0)
@@ -232,8 +225,7 @@ std::ostream& operator<<(std::ostream& os, const Array<T>& arr) {
 	return os;
 }
 
-template <typename T>
-std::istream& operator>>(std::istream& is, Array<T>& arr) {
+template <typename T> std::istream& operator>>(std::istream& is, Array<T>& arr) {
 	T buf;
 	is >> buf;
 	arr.Push(buf);

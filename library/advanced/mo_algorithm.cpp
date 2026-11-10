@@ -46,9 +46,7 @@ template <
   FunctionConcept<void, ull> PopFunc,
   FunctionConcept<void, Tuple<ull, 3>> EvalFunc>
   requires ArrayLike<ArrayType, Tuple<ull, 2>>
-void MoAlgorithm(
-  ArrayType& arr, const PushFunc& push, const PopFunc& pop, const EvalFunc& eval
-) {
+void MoAlgorithm(ArrayType& arr, const PushFunc& push, const PopFunc& pop, const EvalFunc& eval) {
 	// arr: [(l,r),...]
 	ull N = 0;
 	for (ull i = 0; i < arr.Length; ++i)

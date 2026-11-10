@@ -81,8 +81,7 @@ LightArray<ArrayElement<ArrayType>> Sort(ArrayType& arr) {
 
 template <
   typename ArrayType,
-  FunctionConcept<bool, ArrayElement<ArrayType>, ArrayElement<ArrayType>>
-    LTFunc>
+  FunctionConcept<bool, ArrayElement<ArrayType>, ArrayElement<ArrayType>> LTFunc>
   requires ArrayLike<ArrayType, ArrayElement<ArrayType>>
 LightArray<ArrayElement<ArrayType>> Sort(ArrayType& arr, const LTFunc& ltop) {
 	using T = ArrayElement<ArrayType>;

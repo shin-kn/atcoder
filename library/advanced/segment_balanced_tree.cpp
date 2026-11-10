@@ -60,8 +60,7 @@ public:
 
 	using Cell = LazySegmentAVLTreeCell<T, U, V>;
 
-	using AVLTree =
-	  ::AVLTree<T, Cell, decltype(LTOp<T>), BeforeChangeOp, AfterChangeOp>;
+	using AVLTree = ::AVLTree<T, Cell, decltype(LTOp<T>), BeforeChangeOp, AfterChangeOp>;
 
 	using Node = AVLTreeNode<T, Cell>;
 
@@ -113,9 +112,8 @@ LazySegmentAVLTreeClass<
     const BeforeChangeOp& before_change,
     const AfterChangeOp& after_change
   )
-    : add(add), func(func), convolute(convolute), propagate(propagate),
-      execute(execute), refresh(refresh), before_change(before_change),
-      after_change(after_change),
+    : add(add), func(func), convolute(convolute), propagate(propagate), execute(execute),
+      refresh(refresh), before_change(before_change), after_change(after_change),
       avltree(AVLTree(LTOp<T>, before_change, after_change, true)) {}
 
 template <
@@ -373,10 +371,8 @@ template <
   typename U,
   typename V = bool, // dummy action type when no Act is needed
   FunctionConcept<U, U, U> AddOp,
-  FunctionConcept<U, V, U> FuncOp =
-    std::remove_cvref_t<decltype(DoNothingFunc<U, V, U>)>,
-  FunctionConcept<V, V, V> ConvoluteOp =
-    std::remove_cvref_t<decltype(DoNothingFunc<V, V, V>)>>
+  FunctionConcept<U, V, U> FuncOp = std::remove_cvref_t<decltype(DoNothingFunc<U, V, U>)>,
+  FunctionConcept<V, V, V> ConvoluteOp = std::remove_cvref_t<decltype(DoNothingFunc<V, V, V>)>>
 auto LazySegmentAVLTree(
   const AddOp& add,
   const FuncOp& func = DoNothingFunc<U, V, U>,
@@ -450,11 +446,8 @@ auto LazySegmentAVLTree(
 	};
 
 	LazySegmentAVLTreeClass<
-	  T, U, V, AddOp, FuncOp, ConvoluteOp, decltype(propagate), decltype(execute),
-	  decltype(refresh), decltype(before_change), decltype(after_change)>
-	  segtree(
-	    add, func, convolute, propagate, execute, refresh, before_change,
-	    after_change
-	  );
+	  T, U, V, AddOp, FuncOp, ConvoluteOp, decltype(propagate), decltype(execute), decltype(refresh),
+	  decltype(before_change), decltype(after_change)>
+	  segtree(add, func, convolute, propagate, execute, refresh, before_change, after_change);
 	return segtree;
 }

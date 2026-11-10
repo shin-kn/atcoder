@@ -38,9 +38,7 @@ template <typename T> inline T Stack<T>::Pop() {
 	return this->Arr(this->Size);
 }
 
-template <typename T> inline T Stack<T>::Top() {
-	return this->Arr(this->Size - 1);
-}
+template <typename T> inline T Stack<T>::Top() { return this->Arr(this->Size - 1); }
 
 template <typename T> class Queue {
 	Array<T> Arr;

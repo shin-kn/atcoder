@@ -68,14 +68,12 @@ template <typename T, typename U> void Graph<T, U>::Connect(ull from, ull to) {
 	Nodes(to).ToPath.Push(index);
 }
 
-template <typename T, typename U>
-void Graph<T, U>::Connect(ull from, ull to, T cap) {
+template <typename T, typename U> void Graph<T, U>::Connect(ull from, ull to, T cap) {
 	Connect(from, to);
 	PathCapacity[Edges.Length - 1] = cap;
 }
 
-template <typename T, typename U>
-void Graph<T, U>::Connect(ull from, ull to, T cap, U cost) {
+template <typename T, typename U> void Graph<T, U>::Connect(ull from, ull to, T cap, U cost) {
 	Connect(from, to, cap);
 	PathCost[Edges.Length - 1] = cost;
 }

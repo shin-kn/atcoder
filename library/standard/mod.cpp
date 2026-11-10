@@ -13,8 +13,7 @@ class DynamicMod {
 public:
 	size_t val;
 	DynamicMod() { val = 0; }
-	DynamicMod(size_t init)
-	    : val((init < Dynamic_Mod_P) ? init : init % Dynamic_Mod_P) {}
+	DynamicMod(size_t init) : val((init < Dynamic_Mod_P) ? init : init % Dynamic_Mod_P) {}
 	friend inline DynamicMod operator+(DynamicMod a, DynamicMod b) {
 		return DynamicMod(a.val + b.val);
 	}
@@ -131,10 +130,7 @@ public:
 			return Raw(
 			  static_cast<size_t>(
 			    static_cast<signed long long int>(P) +
-			    ((AxBy(
-			      static_cast<signed long long int>(val),
-			      static_cast<signed long long int>(P)
-			    ))[0])
+			    ((AxBy(static_cast<signed long long int>(val), static_cast<signed long long int>(P)))[0])
 			  )
 			);
 		}
@@ -164,8 +160,7 @@ template <ull P> constexpr Mod<P> NthRoot(ull n) {
 
 template <ull P, bool Inverse = false> class NthRootsCacheManagerClass {
 public:
-	inline static Mod<P>*
-	  cache[24]{}; // 24 if P=NiceP, we will later extends to other Ps
+	inline static Mod<P>* cache[24]{}; // 24 if P=NiceP, we will later extends to other Ps
 
 	Mod<P>* get_cache(ull N) {
 		ull log_len = Log2(N);
@@ -189,12 +184,7 @@ NthRootsCacheManagerClass<NiceP, true> NiceInverseRoots;
 
 template <ull P>
 void fourier_transform_forward_part(
-  Mod<P>* cache,
-  const LightArray<Mod<P>>& arr,
-  ull arr_len,
-  ull start,
-  ull total_deg,
-  ull deg
+  Mod<P>* cache, const LightArray<Mod<P>>& arr, ull arr_len, ull start, ull total_deg, ull deg
 ) {
 	const ull Length = 1ull << (total_deg - deg - 1);
 	if (deg == total_deg - 1) {
@@ -236,9 +226,7 @@ void fourier_transform_forward_part(
 			}
 		} else {
 			const ull half_len = 1ull << (total_deg - deg - 2);
-			fourier_transform_forward_part<P>(
-			  cache, arr, arr_len, start, total_deg, deg + 1
-			);
+			fourier_transform_forward_part<P>(cache, arr, arr_len, start, total_deg, deg + 1);
 			fourier_transform_forward_part<P>(
 			  cache + half_len, arr, arr_len, start + half_len, total_deg, deg + 1
 			);
@@ -256,9 +244,8 @@ void fourier_transform_forward_part(
 }
 
 template <ull P>
-LightArray<Mod<P>> fourier_transform_forward(
-  const LightArray<Mod<P>>& arr, ull arr_len, ull Length
-) {
+LightArray<Mod<P>>
+fourier_transform_forward(const LightArray<Mod<P>>& arr, ull arr_len, ull Length) {
 	static_assert(P == NiceP);
 	assert(Length >= 1 && (ull)1 << Log2(Length) == Length);
 	ull total_deg = Log2(Length) + 1;
@@ -270,9 +257,7 @@ LightArray<Mod<P>> fourier_transform_forward(
 }
 
 template <ull P>
-void fourier_transform_inverse_part(
-  Mod<P>* cache_1, Mod<P>* cache_2, ull total_deg, ull deg
-) {
+void fourier_transform_inverse_part(Mod<P>* cache_1, Mod<P>* cache_2, ull total_deg, ull deg) {
 	const ull Length = 1ull << (total_deg - deg - 1);
 	if (deg == total_deg - 1) {
 		return;
@@ -327,9 +312,7 @@ void fourier_transform_inverse_part(
 				++inv_zetas_cache;
 			}
 			fourier_transform_inverse_part<P>(cache_1, cache_2, total_deg, deg + 1);
-			fourier_transform_inverse_part<P>(
-			  cache_1 + half_len, cache_2 + half_len, total_deg, deg + 1
-			);
+			fourier_transform_inverse_part<P>(cache_1 + half_len, cache_2 + half_len, total_deg, deg + 1);
 		}
 	}
 }

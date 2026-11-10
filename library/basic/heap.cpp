@@ -48,13 +48,11 @@ inline void Heap<T, U, Smaller>::Push(T n1, U n2) { // log N
 	++this->Size;
 }
 
-template <typename T, typename U, bool Smaller>
-inline T Heap<T, U, Smaller>::Top() { // log N
+template <typename T, typename U, bool Smaller> inline T Heap<T, U, Smaller>::Top() { // log N
 	return arr[0];
 }
 
-template <typename T, typename U, bool Smaller>
-inline U Heap<T, U, Smaller>::Pop() { // log N
+template <typename T, typename U, bool Smaller> inline U Heap<T, U, Smaller>::Pop() { // log N
 	if (Size == 0)
 		return U();
 	U poped = data(0);
@@ -108,8 +106,7 @@ inline void SimpleHeap<T, Smaller>::Slide(size_t from, size_t to) {
 	arr[to] = arr[from];
 }
 
-template <typename T, bool Smaller>
-inline void SimpleHeap<T, Smaller>::Push(T n1) { // log N
+template <typename T, bool Smaller> inline void SimpleHeap<T, Smaller>::Push(T n1) { // log N
 	size_t loc = this->Size;
 	while (loc != 0) {
 		if constexpr (Smaller) {
@@ -132,13 +129,11 @@ inline void SimpleHeap<T, Smaller>::Push(T n1) { // log N
 	++this->Size;
 }
 
-template <typename T, bool Smaller>
-inline T SimpleHeap<T, Smaller>::Top() { // log N
+template <typename T, bool Smaller> inline T SimpleHeap<T, Smaller>::Top() { // log N
 	return arr[0];
 }
 
-template <typename T, bool Smaller>
-inline T SimpleHeap<T, Smaller>::Pop() { // log N
+template <typename T, bool Smaller> inline T SimpleHeap<T, Smaller>::Pop() { // log N
 	if (Size == 0)
 		return T();
 	T poped = arr[0];
@@ -177,9 +172,7 @@ inline T SimpleHeap<T, Smaller>::Pop() { // log N
 }
 
 // top is the smallest element w.r.t. ltop (pass GTOp<T> for a max-heap)
-template <
-  typename T,
-  FunctionConcept<bool, T, T> LTFunc = std::remove_cvref_t<decltype(LTOp<T>)>>
+template <typename T, FunctionConcept<bool, T, T> LTFunc = std::remove_cvref_t<decltype(LTOp<T>)>>
 class FastHeap {
 	T* arr = nullptr;
 	void Slide(size_t from, size_t to);

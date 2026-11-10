@@ -52,9 +52,7 @@ template <typename T> void LightArray<T>::Set(size_t start, size_t end, T val) {
 	}
 }
 
-template <typename T>
-template <bool UseInit>
-void LightArray<T>::Allocate(size_t n) {
+template <typename T> template <bool UseInit> void LightArray<T>::Allocate(size_t n) {
 	Length = n;
 	if (arr != nullptr) {
 		delete[] arr;
@@ -72,8 +70,7 @@ template <typename T> LightArray<T>::LightArray(LightArray&& src) {
 	src.arr = nullptr;
 	src.Length = 0;
 }
-template <typename T>
-LightArray<T>& LightArray<T>::operator=(LightArray&& other) {
+template <typename T> LightArray<T>& LightArray<T>::operator=(LightArray&& other) {
 	if (this == &other)
 		return *this;
 	if (arr != nullptr)
@@ -85,8 +82,7 @@ LightArray<T>& LightArray<T>::operator=(LightArray&& other) {
 	return *this;
 }
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const LightArray<T>& arr) {
+template <typename T> std::ostream& operator<<(std::ostream& os, const LightArray<T>& arr) {
 	os << "[";
 	for (ull i = 0; i < arr.Length; ++i) {
 		if (i != 0)
@@ -97,8 +93,7 @@ std::ostream& operator<<(std::ostream& os, const LightArray<T>& arr) {
 	return os;
 }
 
-template <typename T>
-std::istream& operator>>(std::istream& is, LightArray<T>& arr) {
+template <typename T> std::istream& operator>>(std::istream& is, LightArray<T>& arr) {
 	for (auto&& v : arr)
 		is >> v;
 	return is;

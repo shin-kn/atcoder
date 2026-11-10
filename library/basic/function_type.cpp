@@ -4,8 +4,7 @@
 
 template <typename... T> struct callable_base {};
 
-template <typename TResult, typename... TArgs>
-struct callable_base<TResult(TArgs...)> {
+template <typename TResult, typename... TArgs> struct callable_base<TResult(TArgs...)> {
 	virtual TResult operator()(TArgs...) = 0;
 	virtual ~callable_base() {}
 
@@ -36,8 +35,7 @@ struct callable<TResult(TArgs...), T> : callable_base<TResult(TArgs...)> {
 
 template <typename... T> class FunctionType;
 
-template <typename TResult, typename... TArgs>
-class FunctionType<TResult(TArgs...)> {
+template <typename TResult, typename... TArgs> class FunctionType<TResult(TArgs...)> {
 public:
 	callable_base<TResult(TArgs...)>* Func = nullptr;
 	FunctionType() {}
@@ -47,13 +45,11 @@ public:
 
 	template <
 	  typename T,
-	  typename std::enable_if<!std::is_same<FunctionType, T>::value, int>::type
-	    unused = 0>
+	  typename std::enable_if<!std::is_same<FunctionType, T>::value, int>::type unused = 0>
 	FunctionType(T&& func) {
-		Func =
-		  new callable<TResult(TArgs...), typename std::remove_reference<T>::type>(
-		    std::forward<T>(func)
-		  );
+		Func = new callable<TResult(TArgs...), typename std::remove_reference<T>::type>(
+		  std::forward<T>(func)
+		);
 	}
 
 	~FunctionType() {

@@ -106,8 +106,7 @@ concept ArrayLike = requires(Arr arr, ull index) {
 };
 
 template <typename ArrayType>
-using ArrayElementWithoutCheck =
-  std::remove_cvref_t<decltype(std::declval<ArrayType>()[0])>;
+using ArrayElementWithoutCheck = std::remove_cvref_t<decltype(std::declval<ArrayType>()[0])>;
 
 template <typename ArrayType>
   requires ArrayLike<ArrayType, ArrayElementWithoutCheck<ArrayType>>

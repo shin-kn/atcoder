@@ -17,11 +17,7 @@ class AVLArrayClass {
 	static_assert(std::is_copy_assignable<U>::value);
 
 public:
-	AVLArrayClass(
-	  const IndexLT& index_lt,
-	  const DataLT& data_lt,
-	  const IndexDataLT& index_data_lt
-	);
+	AVLArrayClass(const IndexLT& index_lt, const DataLT& data_lt, const IndexDataLT& index_data_lt);
 
 	// index updating
 	U& operator[](T ind);
@@ -69,12 +65,10 @@ template <
   FunctionConcept<bool, U, U> DataLT,
   FunctionConcept<bool, Pair<U, T>, Pair<U, T>> IndexDataLT>
 AVLArrayClass<T, U, IndexLT, DataLT, IndexDataLT>::AVLArrayClass(
-  const IndexLT& index_lt,
-  const DataLT& data_lt,
-  const IndexDataLT& index_data_lt
+  const IndexLT& index_lt, const DataLT& data_lt, const IndexDataLT& index_data_lt
 )
-    : index_lt(index_lt), data_lt(data_lt), index_data_lt(index_data_lt),
-      index_tree(index_lt), data_tree(index_data_lt) {}
+    : index_lt(index_lt), data_lt(data_lt), index_data_lt(index_data_lt), index_tree(index_lt),
+      data_tree(index_data_lt) {}
 
 template <
   typename T,
@@ -204,11 +198,7 @@ auto AVLArray(IndexLT&& index_lt, DataLT&& data_lt) {
 		}
 		return index_lt(n1.val2, n2.val2);
 	};
-	AVLArrayClass<
-	  T, U, std::decay_t<IndexLT>, std::decay_t<DataLT>, decltype(index_data_lt)>
-	  avlarray(
-	    std::forward<IndexLT>(index_lt), std::forward<DataLT>(data_lt),
-	    index_data_lt
-	  );
+	AVLArrayClass<T, U, std::decay_t<IndexLT>, std::decay_t<DataLT>, decltype(index_data_lt)>
+	  avlarray(std::forward<IndexLT>(index_lt), std::forward<DataLT>(data_lt), index_data_lt);
 	return avlarray;
 }

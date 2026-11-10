@@ -138,8 +138,7 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-Pair<T, U&>
-AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Nth(ull index) {
+Pair<T, U&> AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Nth(ull index) {
 	assert(index < Size);
 	Current = Root;
 	CurrentNumber = 0;
@@ -169,8 +168,7 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-::LightArray<Pair<T, U>>
-AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Array() {
+::LightArray<Pair<T, U>> AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Array() {
 	::LightArray<Pair<T, U>> arr;
 	arr.Allocate(Size);
 	ull arr_size = 0;
@@ -188,8 +186,7 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-::LightArray<U>
-AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DataArray() {
+::LightArray<U> AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DataArray() {
 	::LightArray<U> arr;
 	arr.Allocate(Size);
 	ull arr_size = 0;
@@ -207,8 +204,7 @@ template <
   FunctionConcept<bool, T, T> LessFunc,
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
-::LightArray<T>
-AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::IndexArray() {
+::LightArray<T> AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::IndexArray() {
 	::LightArray<T> arr;
 	arr.Allocate(Size);
 	ull arr_size = 0;
@@ -276,8 +272,7 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::DFS(
 		if (dfs_num[place] == 1) {
 			func(dfs_loc[place]);
 		}
-		Node* togo =
-		  dfs_num[place] == 0 ? dfs_loc[place]->child1 : dfs_loc[place]->child2;
+		Node* togo = dfs_num[place] == 0 ? dfs_loc[place]->child1 : dfs_loc[place]->child2;
 		if (togo == nullptr || !canreach(togo)) {
 			++dfs_num[place];
 			continue;
@@ -295,9 +290,7 @@ template <
   typename BeforeChangeFunc,
   typename AfterChangeFunc>
 template <typename ULike>
-void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(
-  T index, ULike&& val
-) {
+void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Push(T index, ULike&& val) {
 	++Size;
 	Node* newnode = nullptr;
 	if (AvailNodes.Size > 0) {

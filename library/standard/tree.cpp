@@ -51,12 +51,10 @@ public:
 	// internal
 	bool canLCA = false;
 	void Memo();
-	ull JumpParent(ull, ull); // calld on assumption that canLCA=true
-	ull JumpParentWithDeg(
-	  ull, ull
-	);                        // jump 2^deg; calld on assumption that canLCA=true
-	T JumpToParent(ull, ull); // calld on assumption that canLCA=true
-	                          // assume that T() works like 0
+	ull JumpParent(ull, ull);        // calld on assumption that canLCA=true
+	ull JumpParentWithDeg(ull, ull); // jump 2^deg; calld on assumption that canLCA=true
+	T JumpToParent(ull, ull);        // calld on assumption that canLCA=true
+	                                 // assume that T() works like 0
 };
 
 template <typename T> void Tree<T>::Connect(ull parent, ull child, T val) {
@@ -190,11 +188,9 @@ template <typename T> void Tree<T>::Memo() {
 			}
 			stack[new_len] = stack[i];
 			++new_len;
-			locnode.parents[degree] =
-			  Nodes(locnode.parents[degree - 1]).parents[degree - 1];
+			locnode.parents[degree] = Nodes(locnode.parents[degree - 1]).parents[degree - 1];
 			locnode.toparents[degree] =
-			  locnode.toparents[degree - 1] +
-			  Nodes(locnode.parents[degree - 1]).toparents[degree - 1];
+			  locnode.toparents[degree - 1] + Nodes(locnode.parents[degree - 1]).toparents[degree - 1];
 		}
 		if (new_len == 0)
 			break;

@@ -61,8 +61,7 @@ public:
 template <typename T, typename... Args>
 Tuple(T, Args...) -> Tuple<std::remove_cvref_t<T>, sizeof...(Args) + 1>;
 
-template <typename T, ull N>
-std::ostream& operator<<(std::ostream& os, const Tuple<T, N>& tuple) {
+template <typename T, ull N> std::ostream& operator<<(std::ostream& os, const Tuple<T, N>& tuple) {
 	os << "(";
 	for (ull i = 0; i < N; ++i) {
 		if (i != 0)
@@ -73,8 +72,7 @@ std::ostream& operator<<(std::ostream& os, const Tuple<T, N>& tuple) {
 	return os;
 }
 
-template <typename T, ull N>
-std::istream& operator>>(std::istream& is, Tuple<T, N>& tuple) {
+template <typename T, ull N> std::istream& operator>>(std::istream& is, Tuple<T, N>& tuple) {
 	for (ull i = 0; i < N; ++i)
 		is >> tuple[i];
 	return is;
@@ -84,8 +82,7 @@ template <typename T1, typename T2> class Pair {
 
 public:
 	template <typename S1, typename S2>
-	Pair(S1&& val1, S2&& val2)
-	    : val1(std::forward<S1>(val1)), val2(std::forward<S2>(val2)) {}
+	Pair(S1&& val1, S2&& val2) : val1(std::forward<S1>(val1)), val2(std::forward<S2>(val2)) {}
 	Pair() : val1(T1()), val2(T2()) {}
 
 	T1 val1;
@@ -111,8 +108,7 @@ std::ostream& operator<<(std::ostream& os, const Pair<T1, T2>& val) {
 	return os;
 }
 
-template <typename T1, typename T2>
-std::istream& operator>>(std::istream& is, Pair<T1, T2>& val) {
+template <typename T1, typename T2> std::istream& operator>>(std::istream& is, Pair<T1, T2>& val) {
 	is >> val.val1 >> val.val2;
 	return is;
 }

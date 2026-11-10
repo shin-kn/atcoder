@@ -30,27 +30,19 @@ public:
 
 	// valuetree keeps copies of the values in Pair<U, ull>, whose defaulted
 	// <=> needs U to have <=>
-	static constexpr bool UseValueTree =
-	  std::three_way_comparable<U> && std::copyable<U>;
+	static constexpr bool UseValueTree = std::three_way_comparable<U> && std::copyable<U>;
 
 	U& operator[](const T& key) {
 		update_ref();
 		if (!Has(key)) {
-			search_index = (avail_value_indexes.Size > 0) ? avail_value_indexes.Pop()
-			                                              : values.Length;
+			search_index = (avail_value_indexes.Size > 0) ? avail_value_indexes.Pop() : values.Length;
 			indextree.Push(key, search_index);
 			if constexpr (UseValueTree) {
 				valuetree.Push(Pair<U, ull>(U(), search_index), search_index);
 				Pair<U, ull> added(U(), search_index);
-				if (
-				  min_index != Infty<ull> &&
-				  added < Pair<U, ull>(values(min_index), min_index)
-				)
+				if (min_index != Infty<ull> && added < Pair<U, ull>(values(min_index), min_index))
 					min_index = search_index;
-				if (
-				  max_index != Infty<ull> &&
-				  Pair<U, ull>(values(max_index), max_index) < added
-				)
+				if (max_index != Infty<ull> && Pair<U, ull>(values(max_index), max_index) < added)
 					max_index = search_index;
 			}
 			// [] here: a new search_index may be values.Length, so the arrays must
