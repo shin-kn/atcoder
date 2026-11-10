@@ -53,6 +53,12 @@ public:
 	ull Number() { return CurrentNumber; }
 
 	void Delete();
+	void Delete(T ind) {
+		// Find sets Current, so it must run even under NDEBUG
+		[[maybe_unused]] bool found = Find(ind);
+		assert(found);
+		Delete();
+	}
 	T Index() { return Current->index; }
 	T Index(T ind) {
 		Find(ind);
