@@ -5,7 +5,53 @@
 #include "../basic/light_array.cpp"
 #include "../basic/min_max.cpp"
 #include "../basic/stack_queue.cpp"
+#include "../basic/tuple_pair.cpp"
 #include "tree.cpp"
+
+// this class is used for BaseClass of DirectedGraph UnDirectedGraph,... etc.
+// this is just a box for the query.
+// If you wanna do something like LCA or etc, finalize the graph and create the structure with
+// LightArray or etc. Then, do some algorithm on that. Through this process, the structure will know
+// the number of Nodes and the number of the Path before hand.
+template <typename CapType = NullType> class GraphBase {
+public:
+	static constexpr bool UseCapacity = !std::same_as<CapType, NullType>;
+	void Connect(ull n, ull m)
+	  requires(!UseCapacity)
+	{
+		Push(n);
+		Push(m);
+		paths.Push(Tuple(n, m));
+	}
+
+	void Connect(ull n, ull m, const CapType& cap)
+	  requires UseCapacity
+	{
+		Push(n);
+		Push(m);
+		paths.Push(Tuple(n, m));
+		capacity.Push(cap);
+	}
+
+	void Push(ull n) {
+		if (!is_pushed(n))
+			pushed[n] = true;
+	}
+
+protected:
+	Array<Tuple<ull, 2>> paths;
+	Array<CapType> capacity;
+
+	Array<bool> pushed;
+	bool is_pushed(ull n) {
+		if (n >= pushed.Length) {
+			for (ull i = pushed.Length; i <= n; ++i) {
+				pushed[i] = false;
+			}
+		}
+		return pushed[n];
+	}
+};
 
 template <typename T = ull, typename U = ull> class Graph {
 public:

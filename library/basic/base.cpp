@@ -111,3 +111,5 @@ using ArrayElementWithoutCheck = std::remove_cvref_t<decltype(std::declval<Array
 template <typename ArrayType>
   requires ArrayLike<ArrayType, ArrayElementWithoutCheck<ArrayType>>
 using ArrayElement = ArrayElementWithoutCheck<ArrayType>;
+
+struct NullType {};
