@@ -2,6 +2,7 @@
 #include "array.cpp"
 #include "base.cpp"
 #include "math.cpp"
+#include "min_max.cpp"
 
 template <std::unsigned_integral T> inline T Abs(T num) { // it is unsafe a little
 	return Min(num, num * T(-1));

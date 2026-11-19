@@ -3,6 +3,7 @@
 // # pragma GCC optimize("O3")
 // # pragma GCC optimize("unroll-loops")
 
+#include <bit>
 #include <cassert>
 #include <cmath>
 #include <concepts>
@@ -13,6 +14,7 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+#include <utility>
 
 using std::cin;
 using std::cout;
@@ -74,7 +76,7 @@ constexpr bool DEBUG = false;
 
 constexpr ull SomeBigSize = 1024 * 1024 * 1;
 
-constexpr ull NMOD_COMB_CACHE_N = 1024;
+constexpr ull NMOD_COMB_CACHE_N = 200000;
 
 constexpr ull FOURIER_NO_DFS = 1024;
 
