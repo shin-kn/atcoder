@@ -125,7 +125,8 @@ public:
 	Fraction() {}
 	Fraction(ll n) : num(n) {}
 	Fraction(ll n, ll d) { Set(n, d); }
-	bool operator==(const Fraction& other) const { return num == other.num && den == other.den; }
+	// memberwise is correct because Set keeps every Fraction reduced with den>0
+	bool operator==(const Fraction&) const = default;
 	bool operator<(const Fraction& other) const {
 		return int128_t(num) * other.den < int128_t(other.num) * den;
 	}

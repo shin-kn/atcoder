@@ -24,7 +24,7 @@ public:
 		return DynamicMod(a.val * b.val);
 	}
 	size_t Value() { return val; }
-	bool operator==(DynamicMod other) { return (val == other.val); }
+	bool operator==(const DynamicMod&) const = default;
 };
 
 inline std::ostream& operator<<(std::ostream& os, DynamicMod val) {
@@ -136,7 +136,9 @@ public:
 		}
 	}
 
-	constexpr bool operator==(Mod other) { return val == other.val; }
+	// both sides are in the same (Montgomery or plain) form, so comparing val
+	// is enough
+	constexpr bool operator==(const Mod&) const = default;
 	constexpr size_t Value() {
 		if constexpr (IsMont) {
 			return Montgomery(this->val);
