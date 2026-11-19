@@ -29,6 +29,11 @@ public:
 		for (auto&& ind : cached_indexes)
 			ind = Infty<ull>;
 	}
+	explicit Dict(const U& init_val) : init_val(init_val) {
+		for (auto&& ind : cached_indexes)
+			ind = Infty<ull>;
+	}
+	U init_val = U();
 
 	// valuetree keeps copies of (value, key) in Pair<U, T>, ordered by value and
 	// then by key; Pair's defaulted <=> needs both U and T to have <=>
@@ -45,7 +50,7 @@ public:
 			search_index = (avail_value_indexes.Size > 0) ? avail_value_indexes.Pop() : values.Length;
 			indextree.Push(key, search_index);
 			if constexpr (UseValueTree) {
-				Pair<U, T> added(U(), key);
+				Pair<U, T> added(init_val, key);
 				valuetree.Push(added, search_index);
 				if (min_index != Infty<ull> && added < value_key(min_index))
 					min_index = search_index;
@@ -54,7 +59,12 @@ public:
 			}
 			// [] here: a new search_index may be values.Length, so the arrays must
 			// grow
-			values[search_index] = U();
+			// a non-copyable U (e.g. Array) can't copy init_val, so it starts
+			// from U() instead
+			if constexpr (std::copyable<U>)
+				values[search_index] = init_val;
+			else
+				values[search_index] = U();
 			keys[search_index] = key;
 			register_cache(search_index);
 			++Size;
@@ -104,9 +114,9 @@ public:
 	}
 	void Delete(const T& key) {
 		// Has sets search_index, so it must run even under NDEBUG
-		[[maybe_unused]] bool found = Has(key);
-		assert(found);
-		Delete();
+		bool found = Has(key);
+		if (found)
+			Delete();
 	}
 	U& Min()
 	  requires UseValueTree
@@ -153,6 +163,23 @@ public:
 	}
 
 	LightArray<T> Keys() { return indextree.IndexArray(); }
+	LightArray<U> Values() {
+		auto arr = indextree.DataArray();
+		LightArray<U> res(Size);
+		for (ull i = 0; i < arr.Length; ++i) {
+			res[i] = values[arr[i]];
+		}
+		return res;
+	}
+
+	LightArray<Pair<T, U>> Items() {
+		auto arr = indextree.Array();
+		LightArray<Pair<T, U>> res(Size);
+		for (ull i = 0; i < arr.Length; ++i) {
+			res[i] = Pair<T, U>(arr[i].v1, values[arr[i].v2]);
+		}
+		return res;
+	}
 
 	ull Size = 0;
 
@@ -230,5 +257,25 @@ private:
 		if constexpr (UseValueTree)
 			before_change = *referred;
 		return referred;
+	}
+};
+
+template <typename T> class Set {
+public:
+	AVLTree<T, int> avltree;
+	ull Size = 0;
+	void Push(const T& ind) {
+		if (!Has(ind)) {
+			avltree.Push(ind, 0);
+			++Size;
+		}
+	}
+	bool Has(const T& ind) { return avltree.Find(ind); }
+	void Delete(const T& ind) {
+		bool found = Has(ind);
+		if (found) {
+			avltree.Delete();
+			--Size;
+		}
 	}
 };
