@@ -18,8 +18,8 @@ public:
 
 	T& operator*() { return arr[index]; }
 
+	// != is rewritten from == (C++20)
 	bool operator==(const ArrayIterator& other) const { return index == other.index; }
-	bool operator!=(const ArrayIterator& other) const { return index != other.index; }
 	ArrayIterator& operator++() {
 		++index;
 		return *this;
@@ -50,8 +50,6 @@ public:
 
 	Array(LightArray<T>&& other);
 
-	T& Last() { return (*this)[Length - 1]; }
-
 	~Array();
 
 	inline void Set(size_t start, size_t end, T val);
@@ -59,7 +57,19 @@ public:
 	inline void Set(T val) { this->Set(0, Length, val); }
 
 	inline T& operator[](size_t idx);
+	// signed idx: a negative one counts from the end ([-1] is the last element)
+	template <std::signed_integral I> inline T& operator[](I idx) {
+		if (idx < 0) {
+			assert(ull(-idx) <= Length);
+			return *(arr[Length - ull(-idx)]);
+		}
+		return (*this)[ull(idx)];
+	}
 	inline T& operator()(size_t idx) const;
+
+	// true if non-empty, like Python's bool(list); explicit so an Array
+	// doesn't silently turn into an integer in arithmetic or comparisons
+	explicit operator bool() const { return Length > 0; }
 
 	template <typename U> inline void Push(U&& val);
 
