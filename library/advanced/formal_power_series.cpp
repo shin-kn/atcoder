@@ -128,16 +128,16 @@ FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr, ull max_deg) {
 	while (heap.Size > 1) {
 		Pair loc_1 = heap.Pop();
 		Pair loc_2 = heap.Pop();
-		new_arr[loc_1.val1] = Prod(
-		  (loc_1.val2 ? new_arr[loc_1.val1] : arr[loc_1.val1]),
-		  (loc_2.val2 ? new_arr[loc_2.val1] : arr[loc_2.val1]), max_deg
+		new_arr[loc_1.v1] = Prod(
+		  (loc_1.v2 ? new_arr[loc_1.v1] : arr[loc_1.v1]),
+		  (loc_2.v2 ? new_arr[loc_2.v1] : arr[loc_2.v1]), max_deg
 		);
-		heap.Push(new_arr[loc_1.val1].Degree, Pair(loc_1.val1, true));
+		heap.Push(new_arr[loc_1.v1].Degree, Pair(loc_1.v1, true));
 	}
 	Pair res_loc = heap.Pop();
-	if (res_loc.val2)
-		return std::move(new_arr[res_loc.val1]);
-	return arr[res_loc.val1].Copy();
+	if (res_loc.v2)
+		return std::move(new_arr[res_loc.v1]);
+	return arr[res_loc.v1].Copy();
 }
 
 template <typename ArrayType> FPS<ArrayElement<ArrayType>::ModP> Prod(ArrayType& arr) {

@@ -375,7 +375,7 @@ bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Leq(T index) {
 		return false;
 	if (BestCurrent != Current) {
 		while (true) {
-			if (FindRoutes.Pop().val1 == BestCurrent)
+			if (FindRoutes.Pop().v1 == BestCurrent)
 				break;
 		}
 	}
@@ -418,7 +418,7 @@ bool AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::Geq(T index) {
 		return false;
 	if (BestCurrent != Current) {
 		while (true) {
-			if (FindRoutes.Pop().val1 == BestCurrent)
+			if (FindRoutes.Pop().v1 == BestCurrent)
 				break;
 		}
 	}
@@ -524,8 +524,8 @@ void AVLTree<T, U, LessFunc, BeforeChangeFunc, AfterChangeFunc>::BalanceRoutes(
 
 	while (FindRoutes.Size > 0) {
 		Pair<Node*, bool> route = FindRoutes.Pop();
-		Node* thisnode = route.val1;
-		(route.val2 ? thisnode->child1 : thisnode->child2) = loc;
+		Node* thisnode = route.v1;
+		(route.v2 ? thisnode->child1 : thisnode->child2) = loc;
 		loc = Balance(thisnode);
 	}
 

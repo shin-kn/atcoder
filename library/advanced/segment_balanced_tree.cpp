@@ -45,7 +45,7 @@ public:
 	// index and value of the ind-th element in index order
 	Pair<T, U&> Nth(ull ind) {
 		auto cell = avltree.Nth(ind);
-		return Pair<T, U&>(cell.val1, cell.val2.val);
+		return Pair<T, U&>(cell.v1, cell.v2.val);
 	}
 
 	void Push(T, U);
