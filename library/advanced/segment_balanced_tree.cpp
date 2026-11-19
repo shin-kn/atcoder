@@ -142,7 +142,10 @@ U LazySegmentAVLTreeClass<
   AfterChangeOp>::Eval(T start, T end) {
 	if (avltree.Root == nullptr)
 		return U();
+	// counter starts from the first cell in range, not U(), since U() need not
+	// be the identity of add (e.g. min); an empty range returns U()
 	U counter = U();
+	bool has_counter = false;
 	auto dfs = [&](auto&& self, Node* node) -> void {
 		if (node == nullptr)
 			return;
@@ -153,7 +156,12 @@ U LazySegmentAVLTreeClass<
 		}
 		if (start <= cell.ind_min && end >= cell.ind_max) { // in the range
 			execute(node);
-			counter = add(counter, cell.sum);
+			if (has_counter) {
+				counter = add(counter, cell.sum);
+			} else {
+				counter = cell.sum;
+				has_counter = true;
+			}
 			return;
 		}
 		// else
@@ -163,7 +171,12 @@ U LazySegmentAVLTreeClass<
 		execute(node);
 		self(self, node->child1);
 		if (start <= node->index && end >= node->index) {
-			counter = add(counter, cell.val);
+			if (has_counter) {
+				counter = add(counter, cell.val);
+			} else {
+				counter = cell.val;
+				has_counter = true;
+			}
 		}
 		self(self, node->child2);
 	};
