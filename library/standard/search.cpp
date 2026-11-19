@@ -10,6 +10,10 @@
 //  exists v in [val1,val2] that func(v)=true
 template <std::integral Int, FunctionConcept<bool, Int> FuncType>
 Int Sup(Int lower, Int upper, FuncType&& func) {
+	// lower > upper never ends the loop below
+	assert(lower <= upper);
+	// ++upper must not overflow
+	assert(upper < std::numeric_limits<Int>::max());
 	++upper;
 	// func(upper)=false;
 	while (lower + Int(1) != upper) {
@@ -25,6 +29,12 @@ Int Sup(Int lower, Int upper, FuncType&& func) {
 
 template <std::integral Int, FunctionConcept<bool, Int> FuncType>
 Int Inf(Int lower, Int upper, FuncType&& func) {
+	// lower > upper never ends the loop below
+	assert(lower <= upper);
+	// --lower must not overflow; for unsigned Int, lower = 0 wraps around and
+	// still works, since the midpoint is computed modulo 2^bits
+	if constexpr (std::is_signed_v<Int>)
+		assert(lower > std::numeric_limits<Int>::min());
 	--lower;
 	// func(lower)=false;
 	while (lower + Int(1) != upper) {
@@ -41,6 +51,7 @@ Int Inf(Int lower, Int upper, FuncType&& func) {
 // assume arraylike is sorted
 // assume arr[0]<=val
 template <typename T, ArrayLike<T> Arr> ull Leq(Arr& arr, T val) {
+	assert(arr.Length > 0 && arr[0] <= val);
 	ull lower = 0;
 	ull upper = arr.Length;
 	// func(upper)=false;
@@ -57,6 +68,7 @@ template <typename T, ArrayLike<T> Arr> ull Leq(Arr& arr, T val) {
 // assume arraylike is sorted
 // assume arr[arr.Length-1]>=val
 template <typename T, ArrayLike<T> Arr> ull Geq(Arr& arr, T val) {
+	assert(arr.Length > 0 && arr[arr.Length - 1] >= val);
 	if (arr[0] >= val)
 		return 0;
 	ull lower = 0;
